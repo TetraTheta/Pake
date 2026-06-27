@@ -128,6 +128,12 @@ function getClickGuard(context) {
   ).handler;
 }
 
+function getShortcutKeydown(context) {
+  return context.eventListeners.keydown.find(
+    ({ handler }) => handler.name === "handleShortcutKeydown",
+  );
+}
+
 function makeAnchor(href, target = "_blank") {
   return {
     href,
@@ -272,7 +278,7 @@ describe("event link guard", () => {
     });
     runDomReady(context);
 
-    expect(context.eventListeners.keyup).toHaveLength(1);
+    expect(getShortcutKeydown(context)?.options).toBe(true);
   });
 
   it("handles app shortcuts outside the macOS menu path", () => {
@@ -281,7 +287,7 @@ describe("event link guard", () => {
       userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
     });
     runDomReady(context);
-    const [listener] = context.eventListeners.keyup;
+    const listener = getShortcutKeydown(context);
     const preventDefault = vi.fn();
 
     listener.handler({
@@ -300,6 +306,13 @@ describe("event link guard", () => {
       key: "Delete",
       ctrlKey: true,
       shiftKey: true,
+      preventDefault,
+    });
+    listener.handler({
+      key: "w",
+      ctrlKey: true,
+      shiftKey: false,
+      repeat: true,
       preventDefault,
     });
 

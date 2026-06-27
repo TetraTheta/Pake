@@ -38,17 +38,23 @@ function handleShortcut(event) {
   }
 }
 
+function handleShortcutKeydown(event) {
+  if (event.repeat) {
+    return;
+  }
+
+  if (/windows|linux/i.test(navigator.userAgent) && event.ctrlKey) {
+    handleShortcut(event);
+  }
+  if (/macintosh|mac os x/i.test(navigator.userAgent) && event.metaKey) {
+    handleShortcut(event);
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   if (window["pakeConfig"]?.disabled_web_shortcuts === true) {
     return;
   }
 
-  document.addEventListener("keyup", (event) => {
-    if (/windows|linux/i.test(navigator.userAgent) && event.ctrlKey) {
-      handleShortcut(event);
-    }
-    if (/macintosh|mac os x/i.test(navigator.userAgent) && event.metaKey) {
-      handleShortcut(event);
-    }
-  });
+  document.addEventListener("keydown", handleShortcutKeydown, true);
 });

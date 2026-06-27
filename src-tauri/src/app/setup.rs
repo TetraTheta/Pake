@@ -6,7 +6,7 @@ use tauri::{
     menu::{MenuBuilder, MenuItemBuilder},
     path::BaseDirectory,
     tray::{TrayIconBuilder, TrayIconEvent},
-    AppHandle, Manager,
+    AppHandle, Manager, WebviewWindow,
 };
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 #[cfg(not(target_os = "windows"))]
@@ -14,6 +14,13 @@ use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
 #[cfg(target_os = "windows")]
 use crate::util::save_windows_window_state;
+
+pub fn restore_window(window: &WebviewWindow) -> tauri::Result<()> {
+    let _ = window.unminimize();
+    window.show()?;
+    let _ = window.set_focus();
+    Ok(())
+}
 
 pub fn set_system_tray(
     app: &AppHandle,
@@ -57,13 +64,12 @@ pub fn set_system_tray(
             }
             "hide_app" => {
                 if let Some(window) = app.get_webview_window("pake") {
-                    let _ = window.minimize();
+                    let _ = window.hide();
                 }
             }
             "show_app" => {
                 if let Some(window) = app.get_webview_window("pake") {
-                    let _ = window.show();
-                    let _ = window.set_focus();
+                    let _ = restore_window(&window);
                     #[cfg(target_os = "linux")]
                     if _init_fullscreen && !window.is_fullscreen().unwrap_or(false) {
                         let _ = window.set_fullscreen(true);
@@ -90,11 +96,11 @@ pub fn set_system_tray(
                 if button == tauri::tray::MouseButton::Left {
                     if let Some(window) = tray.app_handle().get_webview_window("pake") {
                         let is_visible = window.is_visible().unwrap_or(false);
-                        if is_visible {
+                        let is_minimized = window.is_minimized().unwrap_or(false);
+                        if is_visible && !is_minimized {
                             let _ = window.hide();
                         } else {
-                            let _ = window.show();
-                            let _ = window.set_focus();
+                            let _ = restore_window(&window);
                             #[cfg(target_os = "linux")]
                             if _init_fullscreen && !window.is_fullscreen().unwrap_or(false) {
                                 let _ = window.set_fullscreen(true);
@@ -175,11 +181,11 @@ pub fn set_global_shortcut(
                     if shortcut_hotkey.eq(event) {
                         if let Some(window) = app.get_webview_window("pake") {
                             let is_visible = window.is_visible().unwrap_or(false);
-                            if is_visible {
+                            let is_minimized = window.is_minimized().unwrap_or(false);
+                            if is_visible && !is_minimized {
                                 let _ = window.hide();
                             } else {
-                                let _ = window.show();
-                                let _ = window.set_focus();
+                                let _ = restore_window(&window);
                                 #[cfg(target_os = "linux")]
                                 if _init_fullscreen && !window.is_fullscreen().unwrap_or(false) {
                                     let _ = window.set_fullscreen(true);

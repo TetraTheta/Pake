@@ -27,7 +27,7 @@ use app::{
         increment_dock_badge, send_notification, set_dock_badge, set_dock_badge_label,
         update_theme_mode,
     },
-    setup::{set_global_shortcut, set_system_tray},
+    setup::{restore_window, set_global_shortcut, set_system_tray},
     window::{open_additional_window_safe, set_window, MultiWindowState},
 };
 use util::get_pake_config;
@@ -196,9 +196,7 @@ pub fn run_app() {
                 if multi_window {
                     open_additional_window_safe(app);
                 } else if let Some(window) = app.get_webview_window("pake") {
-                    let _ = window.unminimize();
-                    let _ = window.show();
-                    let _ = window.set_focus();
+                    let _ = restore_window(&window);
                 }
             },
         ));
@@ -256,7 +254,7 @@ pub fn run_app() {
             // Show window after state restoration to prevent position flashing
             // Unless start_to_tray is enabled, then keep it hidden
             if !should_start_hidden_to_tray(start_to_tray, tray_icon_mode) {
-                let _ = window.show();
+                let _ = restore_window(&window);
                 if let Some(tray) = app.app_handle().tray_by_id("pake-tray") {
                     let _ = tray.set_tooltip(Some(&setup_package_name));
                     if tray_icon_mode == TrayIconMode::Minimized {
@@ -314,9 +312,6 @@ pub fn run_app() {
                                 let _ = window.set_focus();
                             }
                         }
-                        // On macOS, directly hide without minimize to avoid duplicate Dock icons
-                        #[cfg(not(target_os = "macos"))]
-                        let _ = window.minimize();
                         let _ = window.hide();
                     });
                     api.prevent_close();
@@ -345,8 +340,7 @@ pub fn run_app() {
             {
                 if !has_visible_windows {
                     if let Some(window) = _app.get_webview_window("pake") {
-                        let _ = window.show();
-                        let _ = window.set_focus();
+                        let _ = restore_window(&window);
                     }
                 }
             }

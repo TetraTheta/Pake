@@ -208,9 +208,6 @@ pub fn hide_main_window(app: AppHandle) -> Result<(), String> {
             .map_err(|e| format!("Failed to minimize main window: {e}"));
     }
 
-    #[cfg(not(target_os = "macos"))]
-    let _ = window.minimize();
-
     window
         .hide()
         .map_err(|e| format!("Failed to hide main window: {e}"))
