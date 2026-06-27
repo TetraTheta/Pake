@@ -1,7 +1,5 @@
 # Advanced Usage
 
-<h4 align="right"><strong>English</strong> | <a href="advanced-usage_CN.md">简体中文</a></h4>
-
 Customize Pake apps with style modifications, JavaScript injection, and container communication.
 
 ## Style Customization
@@ -283,9 +281,9 @@ Comprehensive CLI build and release validation guidance for multi-platform packa
 
 ```bash
 # Complete test suite (recommended)
-pnpm test                   # Build the CLI, run the Vitest suite, then run real build + release workflow smoke tests
+pnpm test                   # Build the CLI, run the Vitest suite, then run the real build smoke test
 
-# Skip the real build and release workflow smoke tests
+# Skip the real build smoke test
 pnpm test -- --no-build
 
 # Run the fast Vitest suite only
@@ -293,35 +291,28 @@ npx vitest run
 
 # Build the CLI explicitly
 pnpm run cli:build
-
-# Run the release workflow smoke test directly
-node ./tests/release.js
 ```
 
 #### 🚀 Complete Test Suite Includes
 
 - ✅ **Vitest suite**: unit, integration, builder, and CLI option coverage
 - ✅ **Real build smoke test**: platform-aware packaging validation
-- ✅ **Release workflow smoke test**: verifies the release build path used for popular apps
 
 #### Test Details
 
 - `pnpm test` runs the main CLI test runner in [`tests/index.js`](../tests/index.js), which:
 - builds the CLI,
 - runs the Vitest suite,
-- runs the real build smoke test unless `--no-build` is passed,
-- and then runs the release workflow smoke test when the real build phase succeeds.
+- runs the real build smoke test unless `--no-build` is passed.
 
 Useful optional flags:
 
 - `--no-unit`: skip unit tests
 - `--no-integration`: skip integration tests
 - `--no-builder`: skip builder tests
-- `--no-build`: skip the real build smoke test and the follow-up release workflow smoke test
+- `--no-build`: skip the real build smoke test
 - `--e2e`: add end-to-end configuration tests
 - `--pake-cli`: add GitHub Actions related checks
-
-If you only want the release workflow smoke test, run `node ./tests/release.js` directly.
 
 #### Troubleshooting
 

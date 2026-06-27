@@ -6,10 +6,6 @@ on:
       - "V*"
   workflow_dispatch:
     inputs:
-      release_apps:
-        description: "Build popular apps"
-        type: boolean
-        default: false
       publish_docker:
         description: "Publish Docker image"
         type: boolean
@@ -22,25 +18,6 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # Build and release popular apps
-  release-apps:
-    if: |
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) ||
-      (github.event_name == 'workflow_dispatch' && inputs.release_apps)
-    runs-on: ubuntu-latest
-    outputs:
-      apps_name: ${{ steps.read-apps-config.outputs.apps_name }}
-      apps_config: ${{ steps.read-apps-config.outputs.apps_config }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Get Apps Config
-        id: read-apps-config
-        run: |
-          echo "apps_name=$(jq -c '[.[] | .name]' default_app_list.json)" >> $GITHUB_OUTPUT
-          echo "apps_config=$(jq -c '.' default_app_list.json)" >> $GITHUB_OUTPUT
-
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
@@ -54,54 +31,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           skipIfReleaseExists: true
 
-  build-cli:
-    name: Build CLI
-    needs: release-apps
-    if: needs.release-apps.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Setup Node.js Environment
-        uses: ./.github/actions/setup-env
-        with:
-          mode: 'node'
-
-      - name: Build CLI
-        run: pnpm run cli:build
-
-      - name: Upload CLI Artifact
-        uses: actions/upload-artifact@v6
-        with:
-          name: pake-cli-dist
-          path: dist/
-          retention-days: 1
-
-  build-popular-apps:
-    name: ${{ matrix.config.title }}
-    needs: [release-apps, build-cli, create-release]
-    if: |
-      needs.release-apps.result == 'success' &&
-      needs.build-cli.result == 'success' &&
-      (needs.create-release.result == 'success' || needs.create-release.result == 'skipped')
-    strategy:
-      matrix:
-        config: ${{ fromJSON(needs.release-apps.outputs.apps_config) }}
-    uses: ./.github/workflows/single-app.yaml
-    secrets: inherit
-    with:
-      name: ${{ matrix.config.name }}
-      title: ${{ matrix.config.title }}
-      name_zh: ${{ matrix.config.name_zh }}
-      url: ${{ matrix.config.url }}
-      icon: ${{ matrix.config.icon }}
-      new_window: ${{ matrix.config.new_window || false }}
-      incognito: ${{ matrix.config.incognito || false }}
-      width: ${{ matrix.config.width || 1200 }}
-      height: ${{ matrix.config.height || 780 }}
-
-  # Publish Docker image (runs in parallel with app builds)
+  # Publish Docker image
   publish-docker:
     if: |
       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) ||

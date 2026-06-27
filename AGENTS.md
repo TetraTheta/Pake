@@ -30,9 +30,8 @@ Pake/
 │   ├── advanced-usage.md # Customization guide
 │   └── faq.md           # Troubleshooting
 ├── scripts/              # Utility scripts
-├── tests/                # Unit, integration, and release-flow tests
+├── tests/                # Unit, integration, and build tests
 ├── .github/workflows/     # quality/test and release automation
-├── default_app_list.json # Popular apps config for release builds
 ├── package.json          # Node.js dependencies and version
 └── rollup.config.js      # CLI build configuration
 ```
@@ -51,7 +50,7 @@ Pake/
 | `pnpm run format`                    | Format code (prettier + cargo fmt)                              |
 | `npx vitest run`                     | Unit and integration tests only (sub-second)                    |
 | `pnpm test -- --no-build`            | Full suite minus the multi-arch real build                      |
-| `pnpm test`                          | Full suite including release workflow                           |
+| `pnpm test`                          | Full suite including real build validation                      |
 
 Keep shared project facts in this file so Codex, Claude Code, and other agents use the same source of truth. `CLAUDE.md` is a symlink to this file, so edit `AGENTS.md` only. Local-only overrides (`CLAUDE.local.md`, `AGENTS.override.md`, `.claude/settings.local.json`) stay ignored.
 
@@ -100,7 +99,7 @@ Execution rules:
 - Notification flows cross injected JS, Tauri invokes, capabilities, and native notification plugins. Verify the Rust capability and JS caller together.
 - WebKit compositing behavior is platform-sensitive on Linux/Wayland. Runtime flag decisions live in `src-tauri/src/lib.rs`; keep the default conservative, cover compositor exceptions with unit tests, and document user-facing fallbacks in `docs/faq*.md`.
 - Linux AppImage reports often include harmless GTK, appindicator, or GStreamer warnings. Separate optional runtime warnings from the actual symptom before changing code; input/click failures on pure Wayland compositors are not the same class as blank-window failures.
-- Release state can be split. npm Trusted Publishing can succeed before the popular-app release workflow finishes, and GitHub Release assets can exist while a workflow run still shows queued or in progress. Report each surface explicitly.
+- Release state can be split. npm Trusted Publishing, GitHub Release assets, and workflow runs are separate surfaces. Report each surface explicitly.
 
 ## Platform-Specific Development
 
@@ -144,13 +143,10 @@ Tag format: `V0.x.x` (uppercase V). Current version: check `package.json`.
 
 Pushing a `V*` tag triggers `.github/workflows/release.yml`:
 
-1. **release-apps** - reads `default_app_list.json` for app list
-2. **create-release** - creates the GitHub Release placeholder
-3. **build-cli** - builds and uploads the `dist/` CLI artifact
-4. **build-popular-apps** - builds all apps in parallel across macOS/Windows/Linux
-5. **publish-docker** - builds and pushes Docker image to GHCR
+1. **create-release** - creates the GitHub Release placeholder
+2. **publish-docker** - builds and pushes Docker image to GHCR
 
-The workflow can also be triggered manually via `workflow_dispatch` with options to build popular apps or publish Docker independently.
+The workflow can also be triggered manually via `workflow_dispatch` with an option to publish Docker independently.
 
 Pushing the same `V*` tag also triggers `.github/workflows/npm-publish.yml`, which publishes `pake-cli` to npm through Trusted Publishing. Configure the npm package's Trusted Publisher as GitHub Actions, `tw93/Pake`, workflow file `npm-publish.yml`, with no environment. Local `npm publish` is only a fallback when CI or npm registry state blocks the trusted path.
 

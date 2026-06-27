@@ -27,7 +27,7 @@ describe("Cross-platform file finding", () => {
 
   describe("findFilesByPattern", () => {
     /**
-     * Simulates the fixed findOutputFiles logic from tests/release.js
+     * Simulates the output file lookup used by release packaging paths.
      */
     function findFilesByPattern(dir, pattern) {
       const files = [];

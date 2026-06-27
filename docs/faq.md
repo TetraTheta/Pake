@@ -1,7 +1,5 @@
 # Frequently Asked Questions (FAQ)
 
-<h4 align="right"><strong>English</strong> | <a href="faq_CN.md">简体中文</a></h4>
-
 Common issues and solutions when using Pake.
 
 ## Table of Contents

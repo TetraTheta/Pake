@@ -1506,8 +1506,6 @@ class PakeTestRunner {
   }
 }
 
-import ReleaseBuildTest from "./release.js";
-
 // Command line interface
 const args = process.argv.slice(2);
 
@@ -1541,7 +1539,6 @@ Test Components:
 Optional Components:
   --e2e          Add end-to-end configuration tests
   --pake-cli     Add pake-cli GitHub Actions tests
-  --release      Run release workflow tests (Twitter/WeRead) - Slow!
 
 Skip Components (if needed):
   --no-unit      Skip unit tests
@@ -1551,7 +1548,6 @@ Skip Components (if needed):
 
 Examples:
   npm test                         # Complete test suite (recommended)
-  npm test -- --release           # Run everything including release workflow
   pnpm test -- --no-build         # Skip real build (faster for development)
 
 Environment:
@@ -1567,24 +1563,6 @@ const runner = new PakeTestRunner();
 runner
   .runAll(options)
   .then(async (success) => {
-    // Run release workflow tests as part of the standard suite
-    // We skip this if builder tests are explicitly disabled (often used for quick checks)
-    if (success && options.realBuild) {
-      console.log("\n[Package] Running Release Workflow Test...");
-      console.log(
-        "   (This mimics the GitHub Actions release process for popular apps)",
-      );
-
-      // Pass skipCliBuild=true since "npm test" already builds the CLI
-      const releaseTester = new ReleaseBuildTest();
-      const releaseSuccess = await releaseTester.run({ skipCliBuild: true });
-
-      if (!releaseSuccess) {
-        console.error("\n[FAIL] Release workflow tests failed");
-        process.exit(1);
-      }
-    }
-
     process.exit(success ? 0 : 1);
   })
   .catch((error) => {

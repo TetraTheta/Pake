@@ -1,4 +1,4 @@
-name: Build Single Popular App
+name: Build Single App
 
 env:
   NODE_VERSION: "22"
