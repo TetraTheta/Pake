@@ -1,8 +1,6 @@
 {
   "bundle": {
-    "icon": ["png/weekly_256.ico", "png/weekly_32.ico"],
     "active": true,
-    "resources": ["png/weekly_32.ico"],
     "targets": ["nsis"],
     "windows": {
       "digestAlgorithm": "sha256",

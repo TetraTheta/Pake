@@ -4,6 +4,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tauri::{
     menu::{MenuBuilder, MenuItemBuilder},
+    path::BaseDirectory,
     tray::{TrayIconBuilder, TrayIconEvent},
     AppHandle, Manager,
 };
@@ -44,8 +45,10 @@ pub fn set_system_tray(
 
     app.app_handle().remove_tray_by_id("pake-tray");
 
+    let loading_tooltip = format!("Loading {package_name}...");
     let package_name = package_name.to_string();
-    let mut tray_builder = TrayIconBuilder::new()
+    let mut tray_builder = TrayIconBuilder::with_id("pake-tray")
+        .tooltip(&loading_tooltip)
         .menu(&menu)
         .on_menu_event(move |app, event| match event.id().as_ref() {
             "new_window" => {
@@ -100,9 +103,20 @@ pub fn set_system_tray(
     let resolved_icon = if tray_icon_path.is_empty() {
         app.default_window_icon().cloned()
     } else {
-        tauri::image::Image::from_path(tray_icon_path)
-            .ok()
-            .or_else(|| app.default_window_icon().cloned())
+        let icon_path = app
+            .path()
+            .resolve(tray_icon_path, BaseDirectory::Resource)
+            .unwrap_or_else(|_| tray_icon_path.into());
+        match tauri::image::Image::from_path(&icon_path) {
+            Ok(icon) => Some(icon),
+            Err(error) => {
+                eprintln!(
+                    "[Pake] Failed to load tray icon '{}': {error}; continuing without default icon fallback.",
+                    icon_path.display()
+                );
+                None
+            }
+        }
     };
 
     if let Some(icon) = resolved_icon {

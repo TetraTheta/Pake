@@ -11,7 +11,6 @@ use tauri_plugin_window_state::StateFlags;
 #[cfg(target_os = "macos")]
 use std::time::Duration;
 
-const WINDOW_SHOW_DELAY: u64 = 50;
 #[cfg(target_os = "linux")]
 const PAKE_LINUX_WEBKIT_SAFE_MODE: &str = "PAKE_LINUX_WEBKIT_SAFE_MODE";
 #[cfg(target_os = "linux")]
@@ -247,14 +246,16 @@ pub fn run_app() {
             // Show window after state restoration to prevent position flashing
             // Unless start_to_tray is enabled, then keep it hidden
             if !start_to_tray {
-                let window_clone = window.clone();
-                tauri::async_runtime::spawn(async move {
-                    tokio::time::sleep(tokio::time::Duration::from_millis(WINDOW_SHOW_DELAY)).await;
-                    let _ = window_clone.show();
+                let _ = window.show();
+                if let Some(tray) = app.app_handle().tray_by_id("pake-tray") {
+                    let _ = tray.set_tooltip(Some(&setup_package_name));
+                }
 
-                    // Fixed: Linux fullscreen issue with virtual keyboard
-                    #[cfg(target_os = "linux")]
-                    {
+                // Fixed: Linux fullscreen issue with virtual keyboard
+                #[cfg(target_os = "linux")]
+                {
+                    let window_clone = window.clone();
+                    tauri::async_runtime::spawn(async move {
                         if init_fullscreen {
                             let _ = window_clone.set_fullscreen(true);
                             // Ensure webview maintains focus for input after fullscreen
@@ -266,8 +267,10 @@ pub fn run_app() {
                             tokio::time::sleep(tokio::time::Duration::from_millis(30)).await;
                             let _ = window_clone.set_focus();
                         }
-                    }
-                });
+                    });
+                }
+            } else if let Some(tray) = app.app_handle().tray_by_id("pake-tray") {
+                let _ = tray.set_tooltip(Some(&setup_package_name));
             }
 
             Ok(())

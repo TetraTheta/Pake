@@ -65,7 +65,6 @@ export function buildWindowConfigOverrides(
 type PlatformIconInfo = {
   fileExt: string;
   path: string;
-  defaultIcon: string;
   message: string;
 };
 
@@ -231,19 +230,16 @@ async function mergeIcons(
     win32: {
       fileExt: '.ico',
       path: `png/${safeAppName}_256.ico`,
-      defaultIcon: 'png/icon_256.ico',
       message: 'Windows icon must be .ico and 256x256px.',
     },
     linux: {
       fileExt: '.png',
       path: `png/${generateLinuxPackageName(name)}_512.png`,
-      defaultIcon: 'png/icon_512.png',
       message: 'Linux icon must be .png and 512x512px.',
     },
     darwin: {
       fileExt: '.icns',
       path: `icons/${safeAppName}.icns`,
-      defaultIcon: 'icons/icon.icns',
       message: 'macOS icon must be .icns type.',
     },
   };
@@ -260,10 +256,9 @@ async function mergeIcons(
     if (customIconExt !== iconInfo.fileExt) {
       updateIconPath = false;
       logger.warn(`✼ ${iconInfo.message}, but you give ${customIconExt}`);
-      tauriConf.bundle.icon = [iconInfo.defaultIcon];
+      delete tauriConf.bundle.icon;
     } else {
       const iconPath = path.join(npmDirectory, 'src-tauri/', iconInfo.path);
-      tauriConf.bundle.resources = [iconInfo.path];
 
       const absoluteDestPath = path.resolve(iconPath);
       if (resolvedIconPath !== absoluteDestPath) {
@@ -287,18 +282,35 @@ async function mergeIcons(
     if (updateIconPath) {
       tauriConf.bundle.icon = [iconInfo.path];
     } else {
-      logger.warn(`✼ Icon will remain as default.`);
+      logger.warn(`✼ No app icon will be configured.`);
     }
   } else {
-    logger.warn(
-      '✼ Custom icon path may be invalid, default icon will be used instead.',
+    if (options.icon) {
+      logger.warn('✼ Custom icon path may be invalid; no app icon configured.');
+    }
+    delete tauriConf.bundle.icon;
+  }
+
+  if (platform === 'win32' && tauriConf.bundle.icon?.[0]) {
+    await fsExtra.copy(
+      path.join(npmDirectory, 'src-tauri', tauriConf.bundle.icon[0]),
+      path.join(npmDirectory, 'src-tauri', 'icons', 'icon.ico'),
     );
-    tauriConf.bundle.icon = [iconInfo.defaultIcon];
   }
 
   // Set tray icon path.
-  let trayIconPath =
-    platform === 'darwin' ? 'png/icon_512.png' : tauriConf.bundle.icon![0];
+  let trayIconPath = tauriConf.bundle.icon?.[0] ?? '';
+  if (platform === 'darwin') {
+    const macTrayIconPath = `png/${safeAppName}_512.png`;
+    const absoluteMacTrayIconPath = path.join(
+      npmDirectory,
+      'src-tauri',
+      macTrayIconPath,
+    );
+    trayIconPath = (await fsExtra.pathExists(absoluteMacTrayIconPath))
+      ? macTrayIconPath
+      : '';
+  }
   if (options.systemTrayIcon.length > 0) {
     try {
       await fsExtra.pathExists(options.systemTrayIcon);
@@ -314,16 +326,17 @@ async function mergeIcons(
         logger.warn(
           `✼ System tray icon must be .ico or .png, but you provided ${iconExt}.`,
         );
-        logger.warn(`✼ Default system tray icon will be used.`);
+        logger.warn(`✼ No system tray icon will be configured.`);
       }
     } catch (err) {
       logger.warn(
         `✼ Failed to apply system tray icon "${options.systemTrayIcon}": ${err instanceof Error ? err.message : String(err)}`,
       );
-      logger.warn(`✼ Default system tray icon will remain unchanged.`);
+      logger.warn(`✼ System tray icon will remain unchanged.`);
     }
   }
 
+  tauriConf.bundle.resources = trayIconPath ? [trayIconPath] : [];
   tauriConf.pake.system_tray_path = trayIconPath;
   delete tauriConf.app.trayIcon;
 }

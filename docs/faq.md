@@ -402,7 +402,7 @@ See [CLI Usage Guide](cli-usage.md#window-options) for all window options.
 ### App Icon Not Showing Correctly
 
 **Problem:**
-Custom icon doesn't appear or shows default icon.
+Custom icon doesn't appear or the app icon stays unset.
 
 **Solution:**
 
@@ -424,6 +424,8 @@ pake https://example.com --icon ./icon.png
 ```
 
 Pake can automatically convert icons, but providing the correct format is more reliable.
+
+Pake does not ship a fallback tray icon. If neither the website favicon nor `--icon` resolves to a usable icon, `--show-system-tray` has no tray icon to display and the app opens as a normal window.
 
 ---
 

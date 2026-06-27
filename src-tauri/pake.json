@@ -34,7 +34,7 @@
     "linux": true,
     "windows": true
   },
-  "system_tray_path": "icons/icon.png",
+  "system_tray_path": "",
   "inject": [],
   "proxy_url": "",
   "multi_instance": false,

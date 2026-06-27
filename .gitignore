@@ -41,12 +41,9 @@ src-tauri/.cargo/
 src-tauri/.cargo/config.toml
 src-tauri/.pake/
 src-tauri/icons/*.icns
-!src-tauri/icons/icon.icns
+src-tauri/icons/*.ico
 src-tauri/png/*.ico
 src-tauri/png/*.png
-!src-tauri/png/icon_256.ico
-!src-tauri/png/icon_32.ico
-!src-tauri/png/icon_512.png
 src-tauri/gen
 yarn-debug.log*
 yarn-error.log*

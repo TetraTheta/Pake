@@ -347,6 +347,7 @@ Customize the browser user agent. Default is empty.
 #### [show-system-tray]
 
 Display the application in system tray. Default is `false`.
+Pake uses the website favicon or `--icon` result as the tray icon when `--system-tray-icon` is not set. It does not embed a fallback tray icon; if no icon is resolved, no tray icon is created and the app opens normally.
 
 ```shell
 --show-system-tray
@@ -376,6 +377,7 @@ Hide window instead of closing the application when clicking close button. Platf
 #### [start-to-tray]
 
 Start the application minimized to system tray instead of showing the window. Must be used with `--show-system-tray`. Default is `false`.
+If no tray icon is available, there is no tray target to start hidden to, so the window opens normally.
 
 ```shell
 --start-to-tray

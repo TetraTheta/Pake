@@ -1,6 +1,5 @@
 {
   "bundle": {
-    "icon": ["png/weekly_512.png"],
     "active": true,
     "linux": {
       "deb": {

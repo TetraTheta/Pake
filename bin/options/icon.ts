@@ -83,6 +83,27 @@ function getIconBaseName(appName: string): string {
   return baseName || 'pake-app';
 }
 
+async function writeMacOSTrayIcon(
+  inputPath: string,
+  iconName: string,
+): Promise<void> {
+  const trayIconPath = path.join(
+    npmDirectory,
+    'src-tauri',
+    'png',
+    `${iconName}_512.png`,
+  );
+  await fsExtra.ensureDir(path.dirname(trayIconPath));
+  await sharp(inputPath)
+    .resize(512, 512, {
+      fit: 'contain',
+      background: ICON_CONFIG.transparentBackground,
+    })
+    .ensureAlpha()
+    .png()
+    .toFile(trayIconPath);
+}
+
 async function copyWindowsIconIfNeeded(
   convertedPath: string,
   appName: string,
@@ -265,6 +286,7 @@ async function convertIconFormat(
 
     // macOS
     const macIconPath = await applyMacOSMask(processedInputPath);
+    await writeMacOSTrayIcon(processedInputPath, iconName);
     await icongen(macIconPath, platformOutputDir, {
       report: false,
       icns: { name: iconName, sizes: PLATFORM_CONFIG.macos.sizes },
@@ -312,56 +334,6 @@ async function processIcon(
 }
 
 /**
- * Gets default icon with platform-specific fallback logic
- */
-async function getDefaultIcon(): Promise<string> {
-  logger.info('✼ No icon provided, using default icon.');
-
-  if (IS_WIN) {
-    const defaultIcoPath = generateIconPath('icon', true);
-    const defaultPngPath = path.join(
-      npmDirectory,
-      'src-tauri/png/icon_512.png',
-    );
-
-    // Try default ico first
-    if (await fsExtra.pathExists(defaultIcoPath)) {
-      return defaultIcoPath;
-    }
-
-    // Convert from png if ico doesn't exist
-    if (await fsExtra.pathExists(defaultPngPath)) {
-      logger.info('✼ Default ico not found, converting from png...');
-      try {
-        const convertedPath = await convertIconFormat(defaultPngPath, 'icon');
-        if (convertedPath && (await fsExtra.pathExists(convertedPath))) {
-          return await copyWindowsIconIfNeeded(convertedPath, 'icon');
-        }
-      } catch (error) {
-        logger.warn(
-          `Failed to convert default png to ico: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        );
-      }
-    }
-
-    // Fallback to png or empty
-    if (await fsExtra.pathExists(defaultPngPath)) {
-      logger.warn('✼ Using png as fallback for Windows (may cause issues).');
-      return defaultPngPath;
-    }
-
-    logger.warn('✼ No default icon found, will use pake default.');
-    return '';
-  }
-
-  // Linux and macOS defaults
-  const iconPath = IS_LINUX
-    ? 'src-tauri/png/icon_512.png'
-    : 'src-tauri/icons/icon.icns';
-  return path.join(npmDirectory, iconPath);
-}
-
-/**
  * Main icon handling function with simplified logic flow
  */
 export async function handleIcon(
@@ -399,8 +371,8 @@ export async function handleIcon(
     if (faviconPath) return faviconPath;
   }
 
-  // Use default icon
-  return await getDefaultIcon();
+  logger.warn('✼ No icon found; no app icon will be configured.');
+  return '';
 }
 
 /**
@@ -584,7 +556,7 @@ async function tryGetFavicon(
       return resolvedIconPath;
     }
 
-    spinner.warn(`No favicon found for ${domain}. Using default.`);
+    spinner.warn(`No favicon found for ${domain}. No app icon configured.`);
     return null;
   } catch (error) {
     if (error instanceof Error) {
