@@ -320,8 +320,8 @@ describe('BaseBuilder guards', () => {
 
     const appPath = (builder as any).getBuildAppPath(
       process.cwd(),
-      'ChatGPT_1.0.0_x64_en-US',
-      'msi',
+      'ChatGPT_1.0.0_x64-setup',
+      'exe',
     );
     const binaryPath = (builder as any).getRawBinarySourcePath(
       process.cwd(),

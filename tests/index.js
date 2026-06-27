@@ -330,7 +330,7 @@ class PakeTestRunner {
       const platform = process.platform;
       const platformConfigs = {
         darwin: { ext: ".dmg", multiArch: true },
-        win32: { ext: ".msi", multiArch: false },
+        win32: { ext: ".exe", multiArch: false },
         linux: { ext: ".deb", multiArch: false },
       };
 
@@ -709,11 +709,11 @@ class PakeTestRunner {
             win32: {
               app: path.join(
                 config.PROJECT_ROOT,
-                "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi",
+                "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis",
               ),
               installer: path.join(
                 config.PROJECT_ROOT,
-                "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi",
+                "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis",
               ),
               bundleDir: path.join(
                 config.PROJECT_ROOT,
@@ -721,10 +721,6 @@ class PakeTestRunner {
               ),
               // Alternative directories to check
               altDirs: [
-                path.join(
-                  config.PROJECT_ROOT,
-                  "src-tauri/target/release/bundle/msi",
-                ),
                 path.join(
                   config.PROJECT_ROOT,
                   "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis",
@@ -1143,11 +1139,11 @@ class PakeTestRunner {
         ? [
             path.join(
               config.PROJECT_ROOT,
-              "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi",
+              "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis",
             ),
             path.join(
               config.PROJECT_ROOT,
-              "src-tauri/target/release/bundle/msi",
+              "src-tauri/target/release/bundle/nsis",
             ),
           ]
         : []),
@@ -1171,7 +1167,7 @@ class PakeTestRunner {
 
     // Define what we're looking for based on platform
     const buildPatterns = {
-      win32: [".msi", ".exe"],
+      win32: [".exe"],
       linux: [".deb", ".appimage"],
       darwin: [".dmg", ".app"],
     };
@@ -1218,8 +1214,7 @@ class PakeTestRunner {
           const stats = fs.statSync(fullPath);
 
           let fileType = "Build Artifact";
-          if (file.endsWith(".msi")) fileType = "MSI Installer";
-          else if (file.endsWith(".exe")) fileType = "Windows Executable";
+          if (file.endsWith(".exe")) fileType = "Windows Executable";
           else if (file.endsWith(".deb")) fileType = "DEB Package";
           else if (file.endsWith(".appimage")) fileType = "AppImage";
           else if (file.endsWith(".dmg")) fileType = "DMG Image";
@@ -1313,7 +1308,6 @@ class PakeTestRunner {
           (file) =>
             file.endsWith(".app") ||
             file.endsWith(".dmg") ||
-            file.endsWith(".msi") ||
             file.endsWith(".deb") ||
             file.endsWith(".exe"),
         );
@@ -1347,7 +1341,6 @@ class PakeTestRunner {
             if (
               item === "bundle" ||
               item === "release" ||
-              item === "msi" ||
               item === "nsis" ||
               item.includes("windows") ||
               item.includes("msvc")
@@ -1448,7 +1441,7 @@ class PakeTestRunner {
       "URLTest",
     ];
 
-    const extensions = [".app", ".dmg", ".msi", ".deb", ".exe", ".AppImage"];
+    const extensions = [".app", ".dmg", ".deb", ".exe", ".AppImage"];
 
     try {
       const files = fs.readdirSync(config.PROJECT_ROOT);

@@ -166,6 +166,11 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         .hideHelp(),
     )
     .addOption(
+      new Option('--portable', 'Build a Windows EXE without an installer')
+        .default(DEFAULT.portable)
+        .hideHelp(),
+    )
+    .addOption(
       new Option('--multi-instance', 'Allow multiple app instances')
         .default(DEFAULT.multiInstance)
         .hideHelp(),
@@ -249,7 +254,7 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
     .addOption(
       new Option(
         '--iterative-build',
-        'Turn on rapid build mode (app only, no dmg/deb/msi), good for debugging',
+        'Turn on rapid build mode (app only, no dmg/deb/nsis), good for debugging',
       )
         .default(DEFAULT.iterativeBuild)
         .hideHelp(),

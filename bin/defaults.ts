@@ -23,7 +23,7 @@ export const DEFAULT_PAKE_OPTIONS: PakeCliOptions = {
       case 'darwin':
         return 'dmg';
       case 'win32':
-        return 'msi';
+        return 'nsis';
       default:
         return 'deb';
     }
@@ -39,6 +39,7 @@ export const DEFAULT_PAKE_OPTIONS: PakeCliOptions = {
   wasm: false,
   enableDragDrop: false,
   keepBinary: false,
+  portable: false,
   multiInstance: false,
   multiWindow: false,
   startToTray: false,

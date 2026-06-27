@@ -93,6 +93,9 @@ export interface PakeCliOptions {
   // Keep raw binary file alongside installer, default false
   keepBinary: boolean;
 
+  // Build a Windows raw EXE without an installer, default false
+  portable: boolean;
+
   // Allow multiple instances, default false (single instance)
   multiInstance: boolean;
 
@@ -126,7 +129,7 @@ export interface PakeCliOptions {
   // Ignore certificate errors (for self-signed certs), default false
   ignoreCertificateErrors: boolean;
 
-  // Turn on rapid build mode (app only, no dmg/deb/msi), good for debugging
+  // Turn on rapid build mode (app only, no dmg/deb/nsis), good for debugging
   iterativeBuild: boolean;
 
   // Allow sites to open new windows, default false
@@ -179,6 +182,7 @@ export interface WindowConfig {
   min_height: number;
   ignore_certificate_errors: boolean;
   new_window: boolean;
+  webview_devtools: boolean;
 }
 
 export interface PakeConfig {
@@ -208,7 +212,7 @@ export interface PakeTauriConfig {
       [key: string]: unknown;
     };
     windows?: {
-      wix: { language: string[] };
+      nsis?: { languages: string[] };
       [key: string]: unknown;
     };
     [key: string]: unknown;

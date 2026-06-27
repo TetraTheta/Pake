@@ -90,7 +90,7 @@ jobs:
 
 - **Linux**: `.deb` packages (Ubuntu runners)
 - **macOS**: `.app` and `.dmg` packages (macOS runners)
-- **Windows**: `.exe` and `.msi` packages (Windows runners)
+- **Windows**: NSIS setup `.exe` packages (Windows runners)
 
 Use GitHub's matrix strategy to build for multiple platforms simultaneously.
 

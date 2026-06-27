@@ -45,17 +45,17 @@ describe("Workflow path integration", () => {
     it("should match Windows output paths", () => {
       // Expected paths based on WinBuilder behavior
       const windowsPaths = {
-        msi: {
+        nsis: {
           // For x64 builds, files are in architecture-specific directory
           architectureSpecific:
-            "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi",
+            "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis",
           // Fallback to generic path
-          generic: "src-tauri/target/release/bundle/msi",
+          generic: "src-tauri/target/release/bundle/nsis",
         },
       };
 
-      expect(windowsPaths.msi.architectureSpecific).toBeTruthy();
-      expect(windowsPaths.msi.generic).toBeTruthy();
+      expect(windowsPaths.nsis.architectureSpecific).toBeTruthy();
+      expect(windowsPaths.nsis.generic).toBeTruthy();
     });
 
     it("should match macOS output paths", () => {
@@ -142,13 +142,13 @@ describe("Workflow path integration", () => {
       const basePath = "src-tauri/target";
       const arch = "x86_64-pc-windows-msvc";
       const mode = "release";
-      const bundleType = "msi";
+      const bundleType = "nsis";
 
       const fullPath = path.join(basePath, arch, mode, "bundle", bundleType);
 
       expect(fullPath).toContain("x86_64-pc-windows-msvc");
       expect(fullPath).toContain("release");
-      expect(fullPath).toContain("msi");
+      expect(fullPath).toContain("nsis");
     });
 
     it("should construct correct macOS universal path", () => {
@@ -188,13 +188,13 @@ describe("Workflow path integration", () => {
       expect("invalid.deb").not.toMatch(pattern);
     });
 
-    it("should match Windows MSI naming pattern", () => {
-      // Format: {name}_{version}_{arch}_{language}.msi
-      const pattern = /^[\w-]+_\d+\.\d+\.\d+_(x64|arm64)_[\w-]+\.msi$/;
+    it("should match Windows NSIS naming pattern", () => {
+      // Format: {name}_{version}_{arch}-setup.exe
+      const pattern = /^[\w-]+_\d+\.\d+\.\d+_(x64|arm64)-setup\.exe$/;
 
-      expect("myapp_1.0.0_x64_en-US.msi").toMatch(pattern);
-      expect("my-app_2.5.1_arm64_zh-CN.msi").toMatch(pattern);
-      expect("invalid.msi").not.toMatch(pattern);
+      expect("myapp_1.0.0_x64-setup.exe").toMatch(pattern);
+      expect("my-app_2.5.1_arm64-setup.exe").toMatch(pattern);
+      expect("invalid.exe").not.toMatch(pattern);
     });
 
     it("should match macOS DMG naming pattern", () => {
@@ -211,7 +211,7 @@ describe("Workflow path integration", () => {
   describe("Path traversal safety", () => {
     it("should handle paths without directory traversal", () => {
       const safePaths = [
-        "src-tauri/target/release/bundle/msi",
+        "src-tauri/target/release/bundle/nsis",
         "output/windows",
         "dist/cli.js",
       ];

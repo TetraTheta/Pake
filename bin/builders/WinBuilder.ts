@@ -5,7 +5,7 @@ import tauriConfig from '@/helpers/tauriConfig';
 import { generateIdentifierSafeName } from '@/utils/name';
 
 export default class WinBuilder extends BaseBuilder {
-  private buildFormat: string = 'msi';
+  private buildFormat: string = 'nsis';
   private buildArch: string;
 
   constructor(options: PakeAppOptions) {
@@ -19,9 +19,24 @@ export default class WinBuilder extends BaseBuilder {
 
   getFileName(): string {
     const { name } = this.options;
-    const language = tauriConfig.bundle.windows.wix.language[0];
     const targetArch = this.getArchDisplayName(this.buildArch);
-    return `${name}_${tauriConfig.version}_${targetArch}_${language}`;
+    return `${name}_${tauriConfig.version}_${targetArch}-setup`;
+  }
+
+  protected getFileType(): string {
+    return 'exe';
+  }
+
+  protected getBuildAppPath(
+    npmDirectory: string,
+    fileName: string,
+    fileType: string,
+  ): string {
+    return path.join(
+      this.resolveBuildPath(npmDirectory, this.getBasePath()),
+      this.buildFormat,
+      `${fileName}.${fileType}`,
+    );
   }
 
   protected getBuildCommand(packageManager: string = 'pnpm'): string {

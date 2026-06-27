@@ -37,12 +37,12 @@
     <tr>
         <td>WeRead
             <a href="https://github.com/tw93/Pake/releases/latest/download/WeRead.dmg">Mac</a>
-            <a href="https://github.com/tw93/Pake/releases/latest/download/WeRead_x64.msi">Windows</a>
+            <a href="https://github.com/tw93/Pake/releases/latest/download/WeRead_x64.exe">Windows</a>
             <a href="https://github.com/tw93/Pake/releases/latest/download/WeRead_x86_64.deb">Linux</a>
         </td>
         <td>Twitter
             <a href="https://github.com/tw93/Pake/releases/latest/download/Twitter.dmg">Mac</a>
-            <a href="https://github.com/tw93/Pake/releases/latest/download/Twitter_x64.msi">Windows</a>
+            <a href="https://github.com/tw93/Pake/releases/latest/download/Twitter_x64.exe">Windows</a>
             <a href="https://github.com/tw93/Pake/releases/latest/download/Twitter_x86_64.deb">Linux</a>
         </td>
     </tr>
@@ -53,12 +53,12 @@
     <tr>
         <td>Grok
             <a href="https://github.com/tw93/Pake/releases/latest/download/Grok.dmg">Mac</a>
-            <a href="https://github.com/tw93/Pake/releases/latest/download/Grok_x64.msi">Windows</a>
+            <a href="https://github.com/tw93/Pake/releases/latest/download/Grok_x64.exe">Windows</a>
             <a href="https://github.com/tw93/Pake/releases/latest/download/Grok_x86_64.deb">Linux</a>
         </td>
         <td>DeepSeek
             <a href="https://github.com/tw93/Pake/releases/latest/download/DeepSeek.dmg">Mac</a>
-            <a href="https://github.com/tw93/Pake/releases/latest/download/DeepSeek_x64.msi">Windows</a>
+            <a href="https://github.com/tw93/Pake/releases/latest/download/DeepSeek_x64.exe">Windows</a>
             <a href="https://github.com/tw93/Pake/releases/latest/download/DeepSeek_x86_64.deb">Linux</a>
         </td>
     </tr>
@@ -69,12 +69,12 @@
     <tr>
         <td>ChatGPT
             <a href="https://github.com/tw93/Pake/releases/latest/download/ChatGPT.dmg">Mac</a>
-            <a href="https://github.com/tw93/Pake/releases/latest/download/ChatGPT_x64.msi">Windows</a>
+            <a href="https://github.com/tw93/Pake/releases/latest/download/ChatGPT_x64.exe">Windows</a>
             <a href="https://github.com/tw93/Pake/releases/latest/download/ChatGPT_x86_64.deb">Linux</a>
         </td>
         <td>Gemini
             <a href="https://github.com/tw93/Pake/releases/latest/download/Gemini.dmg">Mac</a>
-            <a href="https://github.com/tw93/Pake/releases/latest/download/Gemini_x64.msi">Windows</a>
+            <a href="https://github.com/tw93/Pake/releases/latest/download/Gemini_x64.exe">Windows</a>
             <a href="https://github.com/tw93/Pake/releases/latest/download/Gemini_x86_64.deb">Linux</a>
         </td>
     </tr>
@@ -85,12 +85,12 @@
     <tr>
       <td>YouTube Music
             <a href="https://github.com/tw93/Pake/releases/latest/download/YouTubeMusic.dmg">Mac</a>
-            <a href="https://github.com/tw93/Pake/releases/latest/download/YouTubeMusic_x64.msi">Windows</a>
+            <a href="https://github.com/tw93/Pake/releases/latest/download/YouTubeMusic_x64.exe">Windows</a>
             <a href="https://github.com/tw93/Pake/releases/latest/download/YouTubeMusic_x86_64.deb">Linux</a>
       </td>
       <td>YouTube
             <a href="https://github.com/tw93/Pake/releases/latest/download/YouTube.dmg">Mac</a>
-            <a href="https://github.com/tw93/Pake/releases/latest/download/YouTube_x64.msi">Windows</a>
+            <a href="https://github.com/tw93/Pake/releases/latest/download/YouTube_x64.exe">Windows</a>
             <a href="https://github.com/tw93/Pake/releases/latest/download/YouTube_x86_64.deb">Linux</a>
       </td>
     </tr>
@@ -101,12 +101,12 @@
     <tr>
         <td>LiZhi
             <a href="https://github.com/tw93/Pake/releases/latest/download/LiZhi.dmg">Mac</a>
-            <a href="https://github.com/tw93/Pake/releases/latest/download/LiZhi_x64.msi">Windows</a>
+            <a href="https://github.com/tw93/Pake/releases/latest/download/LiZhi_x64.exe">Windows</a>
             <a href="https://github.com/tw93/Pake/releases/latest/download/LiZhi_x86_64.deb">Linux</a>
         </td>
         <td>ProgramMusic
             <a href="https://github.com/tw93/Pake/releases/latest/download/ProgramMusic.dmg">Mac</a>
-            <a href="https://github.com/tw93/Pake/releases/latest/download/ProgramMusic_x64.msi">Windows</a>
+            <a href="https://github.com/tw93/Pake/releases/latest/download/ProgramMusic_x64.exe">Windows</a>
             <a href="https://github.com/tw93/Pake/releases/latest/download/ProgramMusic_x86_64.deb">Linux</a>
         </td>
     </tr>
@@ -117,12 +117,12 @@
     <tr>
         <td>Excalidraw
             <a href="https://github.com/tw93/Pake/releases/latest/download/Excalidraw.dmg">Mac</a>
-            <a href="https://github.com/tw93/Pake/releases/latest/download/Excalidraw_x64.msi">Windows</a>
+            <a href="https://github.com/tw93/Pake/releases/latest/download/Excalidraw_x64.exe">Windows</a>
             <a href="https://github.com/tw93/Pake/releases/latest/download/Excalidraw_x86_64.deb">Linux</a>
         </td>
         <td>XiaoHongShu
             <a href="https://github.com/tw93/Pake/releases/latest/download/XiaoHongShu.dmg">Mac</a>
-            <a href="https://github.com/tw93/Pake/releases/latest/download/XiaoHongShu_x64.msi">Windows</a>
+            <a href="https://github.com/tw93/Pake/releases/latest/download/XiaoHongShu_x64.exe">Windows</a>
             <a href="https://github.com/tw93/Pake/releases/latest/download/XiaoHongShu_x86_64.deb">Linux</a>
         </td>
     </tr>

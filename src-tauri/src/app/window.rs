@@ -1,6 +1,7 @@
 use crate::app::config::PakeConfig;
 use crate::util::{
-    check_file_or_append, get_data_dir, get_download_message_with_lang, show_toast, MessageType,
+    check_file_or_append, get_download_message_with_lang, get_webview_data_dir, show_toast,
+    MessageType,
 };
 use std::{
     path::PathBuf,
@@ -187,7 +188,7 @@ fn build_window(
         .product_name
         .clone()
         .unwrap_or_else(|| "pake".to_string());
-    let _data_dir = get_data_dir(app, package_name).map_err(tauri::Error::Io)?;
+    let _data_dir = get_webview_data_dir(app, &package_name).map_err(tauri::Error::Io)?;
 
     let window_config = config.windows.first().ok_or_else(|| {
         tauri::Error::Io(std::io::Error::new(

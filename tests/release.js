@@ -101,7 +101,7 @@ class ReleaseBuildTest {
     const directPatterns = [
       `${appName}.dmg`,
       `${appName}.app`,
-      `${appName}.msi`,
+      `${appName}.exe`,
       `${appName}.deb`,
       `${appName}.AppImage`,
     ];
@@ -129,7 +129,7 @@ class ReleaseBuildTest {
       `src-tauri/target/universal-apple-darwin/release/bundle/macos/${appName}.app`,
       `src-tauri/target/universal-apple-darwin/release/bundle/dmg/${appName}.dmg`,
       `src-tauri/target/release/bundle/deb/${appName}_*.deb`,
-      `src-tauri/target/release/bundle/msi/${appName}_*.msi`,
+      `src-tauri/target/release/bundle/nsis/${appName}_*.exe`,
       `src-tauri/target/release/bundle/appimage/${appName}_*.AppImage`,
     ];
 

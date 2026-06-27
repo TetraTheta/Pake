@@ -115,37 +115,6 @@ runs:
       run: |
         echo "PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/share/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig" >> $GITHUB_ENV
 
-    - name: Cache WIX Toolset
-      if: env.SETUP_SYSTEM == 'true' && runner.os == 'Windows'
-      uses: actions/cache@v4
-      id: wix-cache
-      with:
-        path: C:\Program Files (x86)\WiX Toolset v3.11
-        key: windows-wix-3.11.2
-
-    - name: Install WIX Toolset
-      if: env.SETUP_SYSTEM == 'true' && runner.os == 'Windows' && steps.wix-cache.outputs.cache-hit != 'true'
-      shell: powershell
-      run: |
-        try {
-          # Download and install WIX Toolset v3.11
-          Invoke-WebRequest -Uri "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311.exe" -OutFile "wix311.exe"
-          Start-Process -FilePath "wix311.exe" -ArgumentList "/quiet" -Wait
-          Write-Host "✅ WIX Toolset installed successfully"
-        } catch {
-          Write-Error "Failed to install WIX Toolset: $($_.Exception.Message)"
-          exit 1
-        }
-
-    - name: Add WIX to PATH
-      if: env.SETUP_SYSTEM == 'true' && runner.os == 'Windows'
-      shell: powershell
-      run: |
-        $wixPath = "${env:ProgramFiles(x86)}\WiX Toolset v3.11\bin"
-        if (Test-Path $wixPath) {
-          echo $wixPath >> $env:GITHUB_PATH
-        }
-
     # Build optimizations (caching)
     - name: Setup sccache
       if: inputs.mode == 'build'

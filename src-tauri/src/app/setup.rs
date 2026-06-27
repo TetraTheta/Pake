@@ -8,7 +8,11 @@ use tauri::{
     AppHandle, Manager,
 };
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
+#[cfg(not(target_os = "windows"))]
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
+
+#[cfg(target_os = "windows")]
+use crate::util::save_windows_window_state;
 
 pub fn set_system_tray(
     app: &AppHandle,
@@ -16,6 +20,7 @@ pub fn set_system_tray(
     tray_icon_path: &str,
     _init_fullscreen: bool,
     allow_multi_window: bool,
+    package_name: &str,
 ) -> tauri::Result<()> {
     if !show_system_tray {
         app.remove_tray_by_id("pake-tray");
@@ -39,6 +44,7 @@ pub fn set_system_tray(
 
     app.app_handle().remove_tray_by_id("pake-tray");
 
+    let package_name = package_name.to_string();
     let mut tray_builder = TrayIconBuilder::new()
         .menu(&menu)
         .on_menu_event(move |app, event| match event.id().as_ref() {
@@ -61,6 +67,11 @@ pub fn set_system_tray(
                 }
             }
             "quit" => {
+                #[cfg(target_os = "windows")]
+                if let Some(window) = app.get_webview_window("pake") {
+                    let _ = save_windows_window_state(&window, &package_name);
+                }
+                #[cfg(not(target_os = "windows"))]
                 let _ = app.save_window_state(StateFlags::all());
                 app.exit(0);
             }

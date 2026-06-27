@@ -158,6 +158,10 @@ export default abstract class BaseBuilder {
 
   async buildAndCopy(url: string, target: string, logSuccess = true) {
     const { name = 'pake-app' } = this.options;
+    if (this.options.portable && process.platform !== 'win32') {
+      throw new Error('--portable is only supported on Windows.');
+    }
+
     await mergeConfig(url, this.options, tauriConfig);
 
     const packageManager = await detectPackageManager();
@@ -219,6 +223,18 @@ export default abstract class BaseBuilder {
         (retryError as Error).message += APPIMAGE_FAILURE_GUIDANCE;
         throw retryError;
       }
+    }
+
+    if (this.options.portable) {
+      await this.copyRawBinary(npmDirectory, name);
+      if (logSuccess) {
+        logger.success('✔ Build success!');
+        logger.success(
+          '✔ Portable app located in',
+          path.resolve(this.getRawBinaryPath(name)),
+        );
+      }
+      return;
     }
 
     // Copy app
@@ -355,6 +371,10 @@ export default abstract class BaseBuilder {
     const features = this.getBuildFeatures();
     if (features.length > 0) {
       fullCommand += ` --features ${features.join(',')}`;
+    }
+
+    if (this.options.portable) {
+      fullCommand += ' --no-bundle';
     }
 
     return fullCommand;

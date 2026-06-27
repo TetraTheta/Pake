@@ -77,6 +77,17 @@ function asSupportedPlatform(platform: NodeJS.Platform): SupportedPlatform {
   return platform;
 }
 
+function toNsisLanguage(language: string): string {
+  const languageMap: Record<string, string> = {
+    'en-US': 'English',
+    'ja-JP': 'Japanese',
+    'ko-KR': 'Korean',
+    'zh-CN': 'SimpChinese',
+    'zh-TW': 'TradChinese',
+  };
+  return languageMap[language] ?? language;
+}
+
 async function copyTemplateConfigs(): Promise<void> {
   const srcTauriDir = path.join(npmDirectory, 'src-tauri');
   await fsExtra.ensureDir(tauriConfigDirectory);
@@ -466,7 +477,8 @@ export async function mergeConfig(
         'Windows bundle configuration is missing from tauri.windows.conf.json; cannot build Windows target.',
       );
     }
-    windowsBundle.wix.language[0] = installerLanguage;
+    windowsBundle.nsis ??= { languages: [] };
+    windowsBundle.nsis.languages = [toNsisLanguage(installerLanguage)];
   }
 
   await handleLocalFile(url, useLocalFile, tauriConf);

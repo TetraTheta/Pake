@@ -3,7 +3,9 @@ mod app;
 mod util;
 
 use tauri::Manager;
+#[cfg(not(target_os = "windows"))]
 use tauri_plugin_window_state::Builder as WindowStatePlugin;
+#[cfg(not(target_os = "windows"))]
 use tauri_plugin_window_state::StateFlags;
 
 #[cfg(target_os = "macos")]
@@ -28,6 +30,10 @@ use app::{
     window::{open_additional_window_safe, set_window, MultiWindowState},
 };
 use util::get_pake_config;
+#[cfg(target_os = "windows")]
+use util::{
+    restore_windows_window_state, save_windows_tauri_window_state, save_windows_window_state,
+};
 
 #[cfg(any(target_os = "linux", test))]
 fn is_disabled_env_value(value: &str) -> bool {
@@ -149,7 +155,12 @@ pub fn run_app() {
     let multi_instance = pake_config.multi_instance;
     let multi_window = pake_config.multi_window;
     let _enable_find = pake_config.windows[0].enable_find;
+    let package_name = tauri_config
+        .product_name
+        .clone()
+        .unwrap_or_else(|| "pake".to_string());
 
+    #[cfg(not(target_os = "windows"))]
     let window_state_plugin = WindowStatePlugin::default()
         .with_state_flags(if init_fullscreen {
             StateFlags::FULLSCREEN
@@ -161,12 +172,16 @@ pub fn run_app() {
 
     #[allow(deprecated)]
     let mut app_builder = tauri_app
-        .plugin(window_state_plugin)
         .plugin(tauri_plugin_oauth::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init()); // Add this
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        app_builder = app_builder.plugin(window_state_plugin);
+    }
 
     // Only add single instance plugin if multiple instances are not allowed
     if !multi_instance {
@@ -182,6 +197,10 @@ pub fn run_app() {
             },
         ));
     }
+
+    let setup_package_name = package_name.clone();
+    let close_package_name = package_name.clone();
+    let run_package_name = package_name.clone();
 
     app_builder
         .invoke_handler(tauri::generate_handler![
@@ -212,12 +231,16 @@ pub fn run_app() {
             // --- Menu Construction End ---
 
             let window = set_window(app.app_handle(), &pake_config, &tauri_config)?;
+            #[cfg(target_os = "windows")]
+            restore_windows_window_state(&window, &setup_package_name)?;
+
             set_system_tray(
                 app.app_handle(),
                 show_system_tray,
                 &pake_config.system_tray_path,
                 init_fullscreen,
                 multi_window,
+                &setup_package_name,
             )?;
             set_global_shortcut(app.app_handle(), activation_shortcut, init_fullscreen)?;
 
@@ -251,6 +274,11 @@ pub fn run_app() {
         })
         .on_window_event(move |_window, _event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = _event {
+                #[cfg(target_os = "windows")]
+                if _window.label() == "pake" {
+                    let _ = save_windows_tauri_window_state(_window, &close_package_name);
+                }
+
                 if hide_on_close && _window.label() == "pake" {
                     // Hide window when hide_on_close is enabled (regardless of tray status)
                     let window = _window.clone();
@@ -277,8 +305,6 @@ pub fn run_app() {
                     });
                     api.prevent_close();
                 }
-                // If hide_on_close is false, allow normal close behavior
-                // This lets tauri-plugin-window-state save the window position and size
             }
         })
         .build(tauri::generate_context!())
@@ -286,7 +312,14 @@ pub fn run_app() {
             eprintln!("[Pake] Fatal error while building Tauri application: {error}");
             std::process::exit(1);
         })
-        .run(|_app, _event| {
+        .run(move |_app, _event| {
+            #[cfg(target_os = "windows")]
+            if let tauri::RunEvent::Exit = _event {
+                if let Some(window) = _app.get_webview_window("pake") {
+                    let _ = save_windows_window_state(&window, &run_package_name);
+                }
+            }
+
             // Handle macOS dock icon click to reopen hidden window
             #[cfg(target_os = "macos")]
             if let tauri::RunEvent::Reopen {

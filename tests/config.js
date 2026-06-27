@@ -48,7 +48,7 @@ export const TEST_NAMES = {
 // Expected file extensions by platform
 export const PLATFORM_EXTENSIONS = {
   darwin: "dmg",
-  win32: "msi",
+  win32: "exe",
   linux: "deb",
 };
 

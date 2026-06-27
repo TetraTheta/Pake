@@ -3,6 +3,9 @@ use std::env;
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Config, Manager, WebviewWindow};
 
+#[cfg(target_os = "windows")]
+use tauri::{PhysicalPosition, PhysicalSize, Window};
+
 pub fn get_pake_config() -> (PakeConfig, Config) {
     #[cfg(feature = "cli-build")]
     let pake_config: PakeConfig = serde_json::from_str(include_str!("../.pake/pake.json"))
@@ -23,8 +26,19 @@ pub fn get_pake_config() -> (PakeConfig, Config) {
     (pake_config, tauri_config)
 }
 
-pub fn get_data_dir(app: &AppHandle, package_name: String) -> std::io::Result<PathBuf> {
-    let data_dir = app
+pub fn get_app_dir(_app: &AppHandle, package_name: &str) -> std::io::Result<PathBuf> {
+    #[cfg(target_os = "windows")]
+    let app_dir = env::var_os("PAKE_APP_DIR")
+        .filter(|value| !value.is_empty())
+        .map(PathBuf::from)
+        .or_else(|| env::var_os("APPDATA").map(PathBuf::from))
+        .ok_or_else(|| {
+            std::io::Error::new(std::io::ErrorKind::NotFound, "Failed to resolve APPDATA")
+        })?
+        .join(package_name);
+
+    #[cfg(not(target_os = "windows"))]
+    let app_dir = _app
         .path()
         .config_dir()
         .map_err(|err| {
@@ -35,6 +49,32 @@ pub fn get_data_dir(app: &AppHandle, package_name: String) -> std::io::Result<Pa
         })?
         .join(package_name);
 
+    ensure_dir(&app_dir)?;
+    Ok(app_dir)
+}
+
+pub fn get_data_dir(app: &AppHandle, package_name: &str) -> std::io::Result<PathBuf> {
+    let data_dir = get_app_dir(app, package_name)?;
+
+    #[cfg(target_os = "windows")]
+    let data_dir = data_dir.join("data");
+
+    ensure_dir(&data_dir)?;
+    Ok(data_dir)
+}
+
+pub fn get_webview_data_dir(app: &AppHandle, package_name: &str) -> std::io::Result<PathBuf> {
+    #[cfg(target_os = "windows")]
+    let data_dir = get_app_dir(app, package_name)?.join("webview");
+
+    #[cfg(not(target_os = "windows"))]
+    let data_dir = get_data_dir(app, package_name)?;
+
+    ensure_dir(&data_dir)?;
+    Ok(data_dir)
+}
+
+fn ensure_dir(data_dir: &Path) -> std::io::Result<()> {
     if !data_dir.exists() {
         std::fs::create_dir_all(&data_dir).map_err(|err| {
             std::io::Error::new(
@@ -44,7 +84,7 @@ pub fn get_data_dir(app: &AppHandle, package_name: String) -> std::io::Result<Pa
         })?;
     }
 
-    Ok(data_dir)
+    Ok(())
 }
 
 pub fn show_toast(window: &WebviewWindow, message: &str) {
@@ -52,6 +92,71 @@ pub fn show_toast(window: &WebviewWindow, message: &str) {
     if let Err(error) = window.eval(&script) {
         eprintln!("[Pake] Failed to show toast: {error}");
     }
+}
+
+#[cfg(target_os = "windows")]
+#[derive(Default, serde::Deserialize, serde::Serialize)]
+struct WindowState {
+    width: u32,
+    height: u32,
+    x: i32,
+    y: i32,
+    maximized: bool,
+    fullscreen: bool,
+}
+
+#[cfg(target_os = "windows")]
+pub fn restore_windows_window_state(
+    window: &WebviewWindow,
+    package_name: &str,
+) -> tauri::Result<()> {
+    let path = window_state_path(window.app_handle(), package_name).map_err(tauri::Error::Io)?;
+    let Ok(file) = std::fs::File::open(path) else {
+        return Ok(());
+    };
+    let state: WindowState = serde_json::from_reader(file).unwrap_or_default();
+
+    if state.width > 0 && state.height > 0 {
+        window.set_size(PhysicalSize::new(state.width, state.height))?;
+    }
+
+    if state.x != 0 || state.y != 0 {
+        window.set_position(PhysicalPosition::new(state.x, state.y))?;
+    }
+
+    if state.maximized {
+        window.maximize()?;
+    }
+    window.set_fullscreen(state.fullscreen)?;
+
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+pub fn save_windows_window_state(window: &WebviewWindow, package_name: &str) -> tauri::Result<()> {
+    save_windows_tauri_window_state(&window.as_ref().window(), package_name)
+}
+
+#[cfg(target_os = "windows")]
+pub fn save_windows_tauri_window_state(window: &Window, package_name: &str) -> tauri::Result<()> {
+    let state = WindowState {
+        width: window.inner_size()?.width,
+        height: window.inner_size()?.height,
+        x: window.outer_position()?.x,
+        y: window.outer_position()?.y,
+        maximized: window.is_maximized()?,
+        fullscreen: window.is_fullscreen()?,
+    };
+    let path = window_state_path(window.app_handle(), package_name).map_err(tauri::Error::Io)?;
+    let data = serde_json::to_vec_pretty(&state)
+        .map_err(|err| tauri::Error::Io(std::io::Error::other(err)))?;
+    std::fs::write(path, data).map_err(tauri::Error::Io)?;
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn window_state_path(app: &AppHandle, package_name: &str) -> std::io::Result<PathBuf> {
+    Ok(get_data_dir(app, package_name)?.join("window-state.json"))
 }
 
 pub enum MessageType {

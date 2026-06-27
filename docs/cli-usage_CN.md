@@ -305,7 +305,7 @@ pake https://github.com --name GitHub
 指定构建目标架构或格式：
 
 - **Linux**: `deb`, `appimage`, `rpm`, `zst`, `deb-arm64`, `appimage-arm64`, `rpm-arm64`, `zst-arm64`（默认：`deb`, `appimage`）
-- **Windows**: `x64`, `arm64`（未指定时自动检测）
+- **Windows**: `x64`, `arm64`（未指定时自动检测，默认输出 NSIS 安装 `.exe`）
 - **macOS**: `intel`, `apple`, `universal`（架构，未指定时自动检测）；`app`, `dmg`（输出格式，默认：`dmg`）
 
 ```shell
@@ -443,9 +443,27 @@ pake https://github.com --name GitHub --keep-binary
 
 **输出结果**：同时创建安装包和独立可执行文件（Unix 系统为 `AppName-binary`，Windows 为 `AppName.exe`）。
 
+#### [portable]
+
+构建不带安装器的 Windows `.exe`。默认为 `false`。
+
+```shell
+--portable
+
+# 示例：在 Windows 上只生成 GitHub.exe
+pake https://github.com --name GitHub --portable
+```
+
+Windows 默认将应用数据和 WebView 数据保存在 `%AppData%\<AppName>` 下：
+
+- 应用数据：`%AppData%\<AppName>\data`
+- WebView 数据：`%AppData%\<AppName>\webview`
+
+可通过 `PAKE_APP_DIR` 覆盖该根目录，例如 `PAKE_APP_DIR=D:\Portable\GitHub`。非 Windows 系统请使用常规包格式（`.app`、AppImage、DEB、RPM、ZST）；Pake 不提供跨平台单文件应用模式。
+
 #### [iterative-build]
 
-开启快速构建模式（仅生成 app，不生成 dmg/deb/msi），适用于调试。默认为 `false`。
+开启快速构建模式（仅生成 app，不生成 dmg/deb/nsis），适用于调试。默认为 `false`。
 
 ```shell
 --iterative-build
@@ -546,6 +564,14 @@ pake ./my-app/index.html --name "my-app" --use-local-file
 
 ```shell
 --debug
+```
+
+#### [webview-devtools]
+
+在 release 构建中启用 WebView 开发者工具，同时不显示 Windows 控制台窗口。
+
+```shell
+--webview-devtools
 ```
 
 #### [ignore-certificate-errors]

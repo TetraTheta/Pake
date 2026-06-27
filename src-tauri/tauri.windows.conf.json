@@ -3,12 +3,11 @@
     "icon": ["png/weekly_256.ico", "png/weekly_32.ico"],
     "active": true,
     "resources": ["png/weekly_32.ico"],
-    "targets": ["msi"],
+    "targets": ["nsis"],
     "windows": {
       "digestAlgorithm": "sha256",
-      "wix": {
-        "language": ["en-US"],
-        "template": "assets/main.wxs"
+      "nsis": {
+        "languages": ["English"]
       }
     }
   }

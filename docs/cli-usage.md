@@ -307,7 +307,7 @@ Package the application to support both Intel and M1 chips, exclusively for macO
 Specify the build target architecture or format:
 
 - **Linux**: `deb`, `appimage`, `rpm`, `zst`, `deb-arm64`, `appimage-arm64`, `rpm-arm64`, `zst-arm64` (default: `deb`, `appimage`)
-- **Windows**: `x64`, `arm64` (auto-detects if not specified)
+- **Windows**: `x64`, `arm64` (auto-detects if not specified; output is an NSIS setup `.exe` by default)
 - **macOS**: `intel`, `apple`, `universal` (architecture, auto-detects if not specified); `app`, `dmg` (output format, default: `dmg`)
 
 ```shell
@@ -445,9 +445,27 @@ pake https://github.com --name GitHub --keep-binary
 
 **Output**: Creates both installer and standalone executable (`AppName-binary` on Unix, `AppName.exe` on Windows).
 
+#### [portable]
+
+Build a Windows `.exe` without an installer. Default is `false`.
+
+```shell
+--portable
+
+# Example: Build only GitHub.exe on Windows
+pake https://github.com --name GitHub --portable
+```
+
+On Windows, app data and WebView data are stored under `%AppData%\<AppName>` by default:
+
+- App data: `%AppData%\<AppName>\data`
+- WebView data: `%AppData%\<AppName>\webview`
+
+Set `PAKE_APP_DIR` to override that root, for example `PAKE_APP_DIR=D:\Portable\GitHub`. Non-Windows systems should use the normal bundle formats (`.app`, AppImage, DEB, RPM, ZST); Pake does not provide a cross-platform single-file app mode.
+
 #### [iterative-build]
 
-Turn on rapid build mode (app only, no dmg/deb/msi), good for debugging. Default is `false`.
+Turn on rapid build mode (app only, no dmg/deb/nsis), good for debugging. Default is `false`.
 
 ```shell
 --iterative-build
@@ -548,6 +566,14 @@ Enable developer tools and detailed logging for debugging.
 
 ```shell
 --debug
+```
+
+#### [webview-devtools]
+
+Enable WebView developer tools in a release build without showing the Windows console window.
+
+```shell
+--webview-devtools
 ```
 
 #### [ignore-certificate-errors]
