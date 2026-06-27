@@ -109,17 +109,9 @@ export async function detectPackageManager(): Promise<'pnpm' | 'npm'> {
     pinnedPnpmMajor !== null &&
     pnpmMajor !== pinnedPnpmMajor
   ) {
-    if (!(await detectNpm(execa))) {
-      throw new Error(
-        `Detected pnpm ${normalizedPnpmVersion}, but Pake is pinned to ${packageJson.packageManager}. Install npm so Pake can fall back, or use pnpm ${pinnedPnpmMajor}.x to match the project pin.`,
-      );
-    }
-
     logger.warn(
-      `✼ Detected pnpm ${normalizedPnpmVersion}, but Pake is pinned to ${packageJson.packageManager}; using npm for package management instead.`,
+      `✼ Detected pnpm ${normalizedPnpmVersion}, but Pake is pinned to ${packageJson.packageManager}; using the installed pnpm anyway.`,
     );
-    packageManagerCache = 'npm';
-    return 'npm';
   }
 
   logger.info('✺ Using pnpm for package management.');

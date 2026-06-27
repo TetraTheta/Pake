@@ -183,17 +183,14 @@ describe('BaseBuilder guards', () => {
     expect(execaMock).toHaveBeenCalledWith('pnpm', ['--version']);
   });
 
-  it('falls back to npm when the installed pnpm major does not match the pinned major', async () => {
+  it('uses pnpm when the installed major does not match the pinned major', async () => {
     const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     mockPackageManagers({ pnpm: '11.2.2', npm: '11.12.1' });
 
-    await expect(detectPackageManager()).resolves.toBe('npm');
+    await expect(detectPackageManager()).resolves.toBe('pnpm');
     expect(execaMock).toHaveBeenCalledWith('pnpm', ['--version']);
-    expect(execaMock).toHaveBeenCalledWith('npm', ['--version'], {
-      stdio: 'ignore',
-    });
     expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('using npm for package management instead'),
+      expect.stringContaining('using the installed pnpm anyway'),
     );
   });
 
@@ -201,22 +198,20 @@ describe('BaseBuilder guards', () => {
     const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
     mockPackageManagers({ pnpm: 'v11.2.2', npm: '11.12.1' });
 
-    await expect(detectPackageManager()).resolves.toBe('npm');
+    await expect(detectPackageManager()).resolves.toBe('pnpm');
     expect(warnSpy).toHaveBeenCalledWith(
       expect.stringContaining('Detected pnpm v11.2.2'),
     );
   });
 
-  it('throws a clear error when pnpm is incompatible and npm is unavailable', async () => {
+  it('does not require npm when pnpm has a different major version', async () => {
     mockPackageManagers({
       pnpm: '11.2.2',
       npm: new Error('missing npm'),
     });
 
-    await expect(detectPackageManager()).rejects.toThrow(
-      'Detected pnpm v11.2.2, but Pake is pinned to pnpm@10.26.2',
-    );
-    expect(execaMock).toHaveBeenCalledWith('npm', ['--version'], {
+    await expect(detectPackageManager()).resolves.toBe('pnpm');
+    expect(execaMock).not.toHaveBeenCalledWith('npm', ['--version'], {
       stdio: 'ignore',
     });
   });
