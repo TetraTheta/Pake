@@ -1,5 +1,17 @@
 use serde::{Deserialize, Serialize};
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum TrayIconMode {
+    Always,
+    Minimized,
+    Never,
+}
+
+fn default_tray_icon_mode() -> TrayIconMode {
+    TrayIconMode::Always
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct WindowConfig {
     pub url: String,
@@ -81,6 +93,8 @@ pub struct PakeConfig {
     pub windows: Vec<WindowConfig>,
     pub user_agent: UserAgent,
     pub system_tray: FunctionON,
+    #[serde(default = "default_tray_icon_mode")]
+    pub tray_icon_mode: TrayIconMode,
     pub system_tray_path: String,
     pub proxy_url: String,
     #[serde(default)]
@@ -92,5 +106,13 @@ pub struct PakeConfig {
 impl PakeConfig {
     pub fn show_system_tray(&self) -> bool {
         self.system_tray.copied()
+    }
+
+    pub fn tray_icon_mode(&self) -> TrayIconMode {
+        if self.show_system_tray() {
+            self.tray_icon_mode
+        } else {
+            TrayIconMode::Never
+        }
     }
 }

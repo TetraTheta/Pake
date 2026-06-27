@@ -1,3 +1,4 @@
+use crate::app::{config::TrayIconMode, setup::set_system_tray, window::MultiWindowState};
 use crate::util::{check_file_or_append, get_download_message_with_lang, show_toast, MessageType};
 use std::fs::File;
 use std::io::Write;
@@ -178,6 +179,34 @@ pub fn hide_main_window(app: AppHandle) -> Result<(), String> {
     let window = app
         .get_webview_window("pake")
         .ok_or("Main window not found")?;
+    let state = app.state::<MultiWindowState>();
+    let mode = state.pake_config.tray_icon_mode();
+
+    if mode == TrayIconMode::Never {
+        return window
+            .close()
+            .map_err(|e| format!("Failed to close main window: {e}"));
+    }
+
+    if app.tray_by_id("pake-tray").is_none() {
+        let package_name = state.tauri_config.product_name.as_deref().unwrap_or("pake");
+        set_system_tray(
+            &app,
+            true,
+            &state.pake_config.system_tray_path,
+            state.pake_config.windows[0].fullscreen,
+            state.pake_config.multi_window,
+            package_name,
+            mode == TrayIconMode::Minimized,
+        )
+        .map_err(|e| format!("Failed to create system tray: {e}"))?;
+    }
+
+    if app.tray_by_id("pake-tray").is_none() {
+        return window
+            .minimize()
+            .map_err(|e| format!("Failed to minimize main window: {e}"));
+    }
 
     #[cfg(not(target_os = "macos"))]
     let _ = window.minimize();

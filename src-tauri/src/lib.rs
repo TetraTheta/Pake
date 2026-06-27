@@ -21,6 +21,7 @@ const WEBKIT_DISABLE_COMPOSITING_MODE: &str = "WEBKIT_DISABLE_COMPOSITING_MODE";
 const GDK_BACKEND: &str = "GDK_BACKEND";
 
 use app::{
+    config::TrayIconMode,
     invoke::{
         clear_cache_restart, clear_dock_badge, download_file, hide_main_window,
         increment_dock_badge, send_notification, set_dock_badge, set_dock_badge_label,
@@ -91,6 +92,10 @@ fn should_force_wayland_gdk_backend(
     is_non_empty_env_value(wayland_display) && !is_non_empty_env_value(display)
 }
 
+fn should_start_hidden_to_tray(start_to_tray: bool, tray_mode: TrayIconMode) -> bool {
+    start_to_tray && tray_mode != TrayIconMode::Never
+}
+
 #[cfg(target_os = "linux")]
 fn apply_linux_gdk_backend() {
     if should_force_wayland_gdk_backend(
@@ -148,6 +153,7 @@ pub fn run_app() {
     let tauri_app = tauri::Builder::default();
 
     let show_system_tray = pake_config.show_system_tray();
+    let tray_icon_mode = pake_config.tray_icon_mode();
     let hide_on_close = pake_config.windows[0].hide_on_close;
     let activation_shortcut = pake_config.windows[0].activation_shortcut.clone();
     let init_fullscreen = pake_config.windows[0].fullscreen;
@@ -238,20 +244,24 @@ pub fn run_app() {
 
             set_system_tray(
                 app.app_handle(),
-                show_system_tray,
+                show_system_tray && tray_icon_mode != TrayIconMode::Never,
                 &pake_config.system_tray_path,
                 init_fullscreen,
                 multi_window,
                 &setup_package_name,
+                tray_icon_mode == TrayIconMode::Minimized,
             )?;
             set_global_shortcut(app.app_handle(), activation_shortcut, init_fullscreen)?;
 
             // Show window after state restoration to prevent position flashing
             // Unless start_to_tray is enabled, then keep it hidden
-            if !start_to_tray {
+            if !should_start_hidden_to_tray(start_to_tray, tray_icon_mode) {
                 let _ = window.show();
                 if let Some(tray) = app.app_handle().tray_by_id("pake-tray") {
                     let _ = tray.set_tooltip(Some(&setup_package_name));
+                    if tray_icon_mode == TrayIconMode::Minimized {
+                        app.app_handle().remove_tray_by_id("pake-tray");
+                    }
                 }
 
                 // Fixed: Linux fullscreen issue with virtual keyboard
@@ -440,5 +450,13 @@ mod tests {
             Some("wayland-0"),
             None
         ));
+    }
+
+    #[test]
+    fn start_to_tray_requires_a_real_tray() {
+        assert!(should_start_hidden_to_tray(true, TrayIconMode::Always));
+        assert!(should_start_hidden_to_tray(true, TrayIconMode::Minimized));
+        assert!(!should_start_hidden_to_tray(true, TrayIconMode::Never));
+        assert!(!should_start_hidden_to_tray(false, TrayIconMode::Always));
     }
 }

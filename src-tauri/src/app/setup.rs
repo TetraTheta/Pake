@@ -22,6 +22,7 @@ pub fn set_system_tray(
     _init_fullscreen: bool,
     allow_multi_window: bool,
     package_name: &str,
+    remove_on_show: bool,
 ) -> tauri::Result<()> {
     if !show_system_tray {
         app.remove_tray_by_id("pake-tray");
@@ -62,10 +63,14 @@ pub fn set_system_tray(
             "show_app" => {
                 if let Some(window) = app.get_webview_window("pake") {
                     let _ = window.show();
+                    let _ = window.set_focus();
                     #[cfg(target_os = "linux")]
                     if _init_fullscreen && !window.is_fullscreen().unwrap_or(false) {
                         let _ = window.set_fullscreen(true);
                         let _ = window.set_focus();
+                    }
+                    if remove_on_show {
+                        app.remove_tray_by_id("pake-tray");
                     }
                 }
             }
@@ -94,6 +99,9 @@ pub fn set_system_tray(
                             if _init_fullscreen && !window.is_fullscreen().unwrap_or(false) {
                                 let _ = window.set_fullscreen(true);
                             }
+                            if remove_on_show {
+                                tray.app_handle().remove_tray_by_id("pake-tray");
+                            }
                         }
                     }
                 }
@@ -119,11 +127,12 @@ pub fn set_system_tray(
         }
     };
 
-    if let Some(icon) = resolved_icon {
-        tray_builder = tray_builder.icon(icon);
-    } else {
-        eprintln!("[Pake] No tray icon available; tray will build without an icon.");
-    }
+    let Some(icon) = resolved_icon else {
+        eprintln!("[Pake] No tray icon available; system tray is disabled.");
+        app.remove_tray_by_id("pake-tray");
+        return Ok(());
+    };
+    tray_builder = tray_builder.icon(icon);
 
     let tray = tray_builder.build(app)?;
 
