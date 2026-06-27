@@ -300,6 +300,8 @@ fn build_window(
         .initialization_script(include_str!("../inject/toast.js"))
         .initialization_script(include_str!("../inject/fullscreen.js"))
         .initialization_script(include_str!("../inject/event.js"))
+        .initialization_script(include_str!("../inject/shortcuts.js"))
+        .initialization_script(include_str!("../inject/context-menu.js"))
         .initialization_script(include_str!("../inject/style.js"))
         .initialization_script(include_str!("../inject/theme_refresh.js"))
         .initialization_script(include_str!("../inject/auth.js"))

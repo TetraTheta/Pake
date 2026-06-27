@@ -8,10 +8,11 @@ function loadEventHelpers({
   pakeConfig = {},
   userAgent = "Mozilla/5.0",
 } = {}) {
-  const source = fs.readFileSync(
-    path.join(process.cwd(), "src-tauri/src/inject/event.js"),
-    "utf-8",
-  );
+  const readInject = (filename) =>
+    fs.readFileSync(
+      path.join(process.cwd(), "src-tauri/src/inject", filename),
+      "utf-8",
+    );
 
   const invokeCalls = [];
   const invoke = (command, payload) => {
@@ -29,6 +30,7 @@ function loadEventHelpers({
     style: {},
     children: [],
     addEventListener: () => {},
+    getBoundingClientRect: () => ({ right: 0, bottom: 0 }),
     appendChild(child) {
       this.children.push(child);
       if (child.id) elementsById.set(child.id, child);
@@ -60,6 +62,9 @@ function loadEventHelpers({
     navigator: {
       userAgent,
       language: "en-US",
+      clipboard: {
+        writeText: vi.fn(),
+      },
     },
     window: {
       history: {
@@ -81,6 +86,7 @@ function loadEventHelpers({
       open: () => ({}),
       isAuthLink: () => false,
       isAuthPopup: () => false,
+      matchMedia: () => ({ matches: false }),
       pakeConfig,
     },
     document: {
@@ -106,12 +112,14 @@ function loadEventHelpers({
     };
   }
 
-  runInNewContext(source, context);
+  runInNewContext(readInject("event.js"), context);
+  runInNewContext(readInject("shortcuts.js"), context);
+  runInNewContext(readInject("context-menu.js"), context);
   return { ...context, eventListeners, invokeCalls };
 }
 
 function runDomReady(context) {
-  context.eventListeners.DOMContentLoaded[0].handler();
+  context.eventListeners.DOMContentLoaded.forEach(({ handler }) => handler());
 }
 
 function getClickGuard(context) {
@@ -255,6 +263,55 @@ describe("event link guard", () => {
     runDomReady(context);
 
     expect(context.eventListeners.contextmenu).toBeUndefined();
+  });
+
+  it("keeps web shortcuts when webview devtools is enabled", () => {
+    const context = loadEventHelpers({
+      withTauri: true,
+      pakeConfig: { webview_devtools: true },
+    });
+    runDomReady(context);
+
+    expect(context.eventListeners.keyup).toHaveLength(1);
+  });
+
+  it("handles app shortcuts outside the macOS menu path", () => {
+    const context = loadEventHelpers({
+      withTauri: true,
+      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+    });
+    runDomReady(context);
+    const [listener] = context.eventListeners.keyup;
+    const preventDefault = vi.fn();
+
+    listener.handler({
+      key: "l",
+      ctrlKey: true,
+      shiftKey: false,
+      preventDefault,
+    });
+    listener.handler({
+      key: "w",
+      ctrlKey: true,
+      shiftKey: false,
+      preventDefault,
+    });
+    listener.handler({
+      key: "Delete",
+      ctrlKey: true,
+      shiftKey: true,
+      preventDefault,
+    });
+
+    expect(context.navigator.clipboard.writeText).toHaveBeenCalledWith(
+      "https://example.com/app",
+    );
+    expect(context.invokeCalls).toContainEqual(["hide_main_window", undefined]);
+    expect(context.invokeCalls).toContainEqual([
+      "clear_cache_restart",
+      undefined,
+    ]);
+    expect(preventDefault).toHaveBeenCalledTimes(3);
   });
 
   it("bridges Web Badging API calls to explicit badge commands", async () => {

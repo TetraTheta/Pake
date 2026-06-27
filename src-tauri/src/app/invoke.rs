@@ -174,6 +174,32 @@ pub fn clear_dock_badge(app: AppHandle) -> Result<(), String> {
 }
 
 #[command]
+pub fn hide_main_window(app: AppHandle) -> Result<(), String> {
+    let window = app
+        .get_webview_window("pake")
+        .ok_or("Main window not found")?;
+
+    #[cfg(not(target_os = "macos"))]
+    let _ = window.minimize();
+
+    window
+        .hide()
+        .map_err(|e| format!("Failed to hide main window: {e}"))
+}
+
+#[command]
+pub fn clear_cache_restart(app: AppHandle) -> Result<(), String> {
+    let window = app
+        .get_webview_window("pake")
+        .ok_or("Main window not found")?;
+
+    window
+        .clear_all_browsing_data()
+        .map_err(|e| format!("Failed to clear browsing data: {e}"))?;
+    app.restart();
+}
+
+#[command]
 pub fn set_dock_badge_label(app: AppHandle, label: Option<String>) -> Result<(), String> {
     BADGE_COUNT.store(0, Ordering::SeqCst);
     let label = normalize_badge_label(label.as_deref())?;
