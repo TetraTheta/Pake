@@ -457,6 +457,7 @@ function buildWindowConfigOverrides(options, platform = asSupportedPlatform(proc
         min_height: options.minHeight,
         ignore_certificate_errors: options.ignoreCertificateErrors,
         new_window: options.newWindow,
+        webview_devtools: options.webviewDevtools,
     };
 }
 function asSupportedPlatform(platform) {
@@ -464,6 +465,16 @@ function asSupportedPlatform(platform) {
         throw new Error(`Pake only supports win32, darwin, and linux; detected '${platform}'.`);
     }
     return platform;
+}
+function toNsisLanguage(language) {
+    const languageMap = {
+        'en-US': 'English',
+        'ja-JP': 'Japanese',
+        'ko-KR': 'Korean',
+        'zh-CN': 'SimpChinese',
+        'zh-TW': 'TradChinese',
+    };
+    return languageMap[language] ?? language;
 }
 async function copyTemplateConfigs() {
     const srcTauriDir = path.join(npmDirectory, 'src-tauri');
@@ -731,7 +742,8 @@ async function mergeConfig(url, options, tauriConf) {
         if (!windowsBundle) {
             throw new Error('Windows bundle configuration is missing from tauri.windows.conf.json; cannot build Windows target.');
         }
-        windowsBundle.wix.language[0] = installerLanguage;
+        windowsBundle.nsis ?? (windowsBundle.nsis = { languages: [] });
+        windowsBundle.nsis.languages = [toNsisLanguage(installerLanguage)];
     }
     await handleLocalFile(url, useLocalFile, tauriConf);
     const platformMap = {
@@ -1006,6 +1018,9 @@ class BaseBuilder {
     }
     async buildAndCopy(url, target, logSuccess = true) {
         const { name = 'pake-app' } = this.options;
+        if (this.options.portable && process.platform !== 'win32') {
+            throw new Error('--portable is only supported on Windows.');
+        }
         await mergeConfig(url, this.options, tauriConfig);
         const packageManager = await detectPackageManager();
         // Build app
@@ -1053,6 +1068,14 @@ class BaseBuilder {
                 retryError.message += APPIMAGE_FAILURE_GUIDANCE;
                 throw retryError;
             }
+        }
+        if (this.options.portable) {
+            await this.copyRawBinary(npmDirectory, name);
+            if (logSuccess) {
+                logger.success('✔ Build success!');
+                logger.success('✔ Portable app located in', path.resolve(this.getRawBinaryPath(name)));
+            }
+            return;
         }
         // Copy app
         const fileName = this.getFileName();
@@ -1132,6 +1155,9 @@ class BaseBuilder {
         if (features.length > 0) {
             fullCommand += ` --features ${features.join(',')}`;
         }
+        if (this.options.portable) {
+            fullCommand += ' --no-bundle';
+        }
         return fullCommand;
     }
     getBuildFeatures() {
@@ -1142,6 +1168,9 @@ class BaseBuilder {
             if (macOSVersion >= 23) {
                 features.push('macos-proxy');
             }
+        }
+        if (this.options.webviewDevtools) {
+            features.push('webview-devtools');
         }
         return features;
     }
@@ -1350,7 +1379,7 @@ class MacBuilder extends BaseBuilder {
 class WinBuilder extends BaseBuilder {
     constructor(options) {
         super(options);
-        this.buildFormat = 'msi';
+        this.buildFormat = 'nsis';
         const validArchs = ['x64', 'arm64', 'auto'];
         this.buildArch = validArchs.includes(options.targets || '')
             ? this.resolveTargetArch(options.targets)
@@ -1359,9 +1388,14 @@ class WinBuilder extends BaseBuilder {
     }
     getFileName() {
         const { name } = this.options;
-        const language = tauriConfig.bundle.windows.wix.language[0];
         const targetArch = this.getArchDisplayName(this.buildArch);
-        return `${name}_${tauriConfig.version}_${targetArch}_${language}`;
+        return `${name}_${tauriConfig.version}_${targetArch}-setup`;
+    }
+    getFileType() {
+        return 'exe';
+    }
+    getBuildAppPath(npmDirectory, fileName, fileType) {
+        return path.join(this.resolveBuildPath(npmDirectory, this.getBasePath()), this.buildFormat, `${fileName}.${fileType}`);
     }
     getBuildCommand(packageManager = 'pnpm') {
         const configPath = path.join('src-tauri', '.pake', 'tauri.conf.json');
@@ -2573,7 +2607,7 @@ const DEFAULT_PAKE_OPTIONS = {
             case 'darwin':
                 return 'dmg';
             case 'win32':
-                return 'msi';
+                return 'nsis';
             default:
                 return 'deb';
         }
@@ -2582,6 +2616,7 @@ const DEFAULT_PAKE_OPTIONS = {
     systemTrayIcon: '',
     proxyUrl: '',
     debug: false,
+    webviewDevtools: false,
     inject: [],
     installerLanguage: 'en-US',
     hideOnClose: undefined, // Platform-specific: true for macOS, false for others
@@ -2589,6 +2624,7 @@ const DEFAULT_PAKE_OPTIONS = {
     wasm: false,
     enableDragDrop: false,
     keepBinary: false,
+    portable: false,
     multiInstance: false,
     multiWindow: false,
     startToTray: false,
@@ -2671,6 +2707,9 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         return previous ? [...previous, ...files] : files;
     }, DEFAULT_PAKE_OPTIONS.inject)
         .option('--debug', 'Debug build and more output', DEFAULT_PAKE_OPTIONS.debug)
+        .addOption(new Option('--webview-devtools', 'Enable WebView developer tools in release builds')
+        .default(DEFAULT_PAKE_OPTIONS.webviewDevtools)
+        .hideHelp())
         .addOption(new Option('--proxy-url <url>', 'Proxy URL for all network requests (http://, https://, socks5://)')
         .default(DEFAULT_PAKE_OPTIONS.proxyUrl)
         .hideHelp())
@@ -2727,6 +2766,9 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         .addOption(new Option('--keep-binary', 'Keep raw binary file alongside installer')
         .default(DEFAULT_PAKE_OPTIONS.keepBinary)
         .hideHelp())
+        .addOption(new Option('--portable', 'Build a Windows EXE without an installer')
+        .default(DEFAULT_PAKE_OPTIONS.portable)
+        .hideHelp())
         .addOption(new Option('--multi-instance', 'Allow multiple app instances')
         .default(DEFAULT_PAKE_OPTIONS.multiInstance)
         .hideHelp())
@@ -2766,7 +2808,7 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         .addOption(new Option('--ignore-certificate-errors', 'Ignore certificate errors (for self-signed certificates)')
         .default(DEFAULT_PAKE_OPTIONS.ignoreCertificateErrors)
         .hideHelp())
-        .addOption(new Option('--iterative-build', 'Turn on rapid build mode (app only, no dmg/deb/msi), good for debugging')
+        .addOption(new Option('--iterative-build', 'Turn on rapid build mode (app only, no dmg/deb/nsis), good for debugging')
         .default(DEFAULT_PAKE_OPTIONS.iterativeBuild)
         .hideHelp())
         .addOption(new Option('--new-window', 'Allow sites to open new windows (for auth flows, tabs, branches)').default(DEFAULT_PAKE_OPTIONS.newWindow))

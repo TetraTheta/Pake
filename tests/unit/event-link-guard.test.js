@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 
 function loadEventHelpers({
   withTauri = false,
+  pakeConfig = {},
   userAgent = "Mozilla/5.0",
 } = {}) {
   const source = fs.readFileSync(
@@ -80,7 +81,7 @@ function loadEventHelpers({
       open: () => ({}),
       isAuthLink: () => false,
       isAuthPopup: () => false,
-      pakeConfig: {},
+      pakeConfig,
     },
     document: {
       addEventListener: registerListener,
@@ -244,6 +245,16 @@ describe("event link guard", () => {
     expect(context.window.location.href).toBe(
       "https://app.example.com/callback",
     );
+  });
+
+  it("does not install the custom context menu when webview devtools is enabled", () => {
+    const context = loadEventHelpers({
+      withTauri: true,
+      pakeConfig: { webview_devtools: true },
+    });
+    runDomReady(context);
+
+    expect(context.eventListeners.contextmenu).toBeUndefined();
   });
 
   it("bridges Web Badging API calls to explicit badge commands", async () => {

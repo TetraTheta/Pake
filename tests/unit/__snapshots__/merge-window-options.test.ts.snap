@@ -24,6 +24,7 @@ exports[`buildWindowConfigOverrides > matches the default snapshot on Linux 1`] 
   "resizable": true,
   "start_to_tray": false,
   "title": undefined,
+  "webview_devtools": false,
   "width": 1200,
   "zoom": 100,
 }
@@ -53,6 +54,7 @@ exports[`buildWindowConfigOverrides > matches the default snapshot on Windows 1`
   "resizable": true,
   "start_to_tray": false,
   "title": undefined,
+  "webview_devtools": false,
   "width": 1200,
   "zoom": 100,
 }
@@ -82,6 +84,7 @@ exports[`buildWindowConfigOverrides > matches the default snapshot on macOS 1`] 
   "resizable": true,
   "start_to_tray": false,
   "title": undefined,
+  "webview_devtools": false,
   "width": 1200,
   "zoom": 100,
 }

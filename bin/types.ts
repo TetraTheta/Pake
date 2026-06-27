@@ -69,6 +69,9 @@ export interface PakeCliOptions {
   // Debug mode, outputs more logs
   debug: boolean;
 
+  // Enable WebView developer tools without switching the whole app to debug build
+  webviewDevtools: boolean;
+
   /** External scripts that need to be injected into the page. */
   inject: string[];
 

@@ -308,6 +308,20 @@ describe('BaseBuilder guards', () => {
     expect(command).toContain('--features cli-build');
   });
 
+  it('adds webview devtools feature without switching to debug build', () => {
+    const builder = new TestBuilder({
+      debug: false,
+      targets: 'deb',
+      webviewDevtools: true,
+    } as any);
+
+    const command = (builder as any).getBuildCommand('pnpm');
+
+    expect(command).toContain('--features cli-build,webview-devtools');
+    expect(command).toContain('pnpm run build');
+    expect(command).not.toContain('build:debug');
+  });
+
   it('copies Windows build artifacts from CARGO_TARGET_DIR when it is set', () => {
     const cargoTargetDir = path.join(process.cwd(), '.short-cargo-target');
     process.env.CARGO_TARGET_DIR = cargoTargetDir;
@@ -334,8 +348,8 @@ describe('BaseBuilder guards', () => {
         'x86_64-pc-windows-msvc',
         'release',
         'bundle',
-        'msi',
-        'ChatGPT_1.0.0_x64_en-US.msi',
+        'nsis',
+        'ChatGPT_1.0.0_x64-setup.exe',
       ),
     );
     expect(binaryPath).toBe(

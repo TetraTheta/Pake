@@ -265,6 +265,10 @@ fn build_window(
         window_builder = window_builder.disable_drag_drop_handler();
     }
 
+    if window_config.webview_devtools {
+        window_builder = window_builder.devtools(true);
+    }
+
     if window_config.new_window {
         let app_handle = app.clone();
         let popup_config = config.clone();

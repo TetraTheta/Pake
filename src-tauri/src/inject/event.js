@@ -925,53 +925,55 @@ document.addEventListener("DOMContentLoaded", () => {
     return items;
   }
 
-  // Handle right-click context menu
-  document.addEventListener(
-    "contextmenu",
-    function (event) {
-      const target = event.target;
+  if (!pakeConfig.webview_devtools) {
+    // Handle right-click context menu
+    document.addEventListener(
+      "contextmenu",
+      function (event) {
+        const target = event.target;
 
-      // Check for media elements (images/videos)
-      const mediaInfo = getMediaInfo(target);
+        // Check for media elements (images/videos)
+        const mediaInfo = getMediaInfo(target);
 
-      // Check for links (but not if it's media)
-      const linkElement =
-        target && typeof target.closest === "function"
-          ? target.closest("a")
-          : null;
-      const isLink = linkElement && linkElement.href && !mediaInfo.isMedia;
+        // Check for links (but not if it's media)
+        const linkElement =
+          target && typeof target.closest === "function"
+            ? target.closest("a")
+            : null;
+        const isLink = linkElement && linkElement.href && !mediaInfo.isMedia;
 
-      // Only show custom menu for media or links
-      if (mediaInfo.isMedia || isLink) {
-        event.preventDefault();
-        event.stopPropagation();
+        // Only show custom menu for media or links
+        if (mediaInfo.isMedia || isLink) {
+          event.preventDefault();
+          event.stopPropagation();
 
-        let menuItems = [];
+          let menuItems = [];
 
-        if (mediaInfo.isMedia) {
-          menuItems = buildMenuItems("media", mediaInfo);
-        } else if (isLink) {
-          const linkUrl = linkElement.href;
-          menuItems = buildMenuItems("link", {
-            url: linkUrl,
-            isFile: isDownloadableFile(linkUrl),
-          });
+          if (mediaInfo.isMedia) {
+            menuItems = buildMenuItems("media", mediaInfo);
+          } else if (isLink) {
+            const linkUrl = linkElement.href;
+            menuItems = buildMenuItems("link", {
+              url: linkUrl,
+              isFile: isDownloadableFile(linkUrl),
+            });
+          }
+
+          showContextMenu(event.clientX, event.clientY, menuItems);
         }
+        // For all other elements, let browser's default context menu handle it
+      },
+      true,
+    );
 
-        showContextMenu(event.clientX, event.clientY, menuItems);
+    // Hide context menu when clicking elsewhere
+    document.addEventListener("click", hideContextMenu);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        hideContextMenu();
       }
-      // For all other elements, let browser's default context menu handle it
-    },
-    true,
-  );
-
-  // Hide context menu when clicking elsewhere
-  document.addEventListener("click", hideContextMenu);
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      hideContextMenu();
-    }
-  });
+    });
+  }
 });
 
 // Bridge the Web Notification + Web Badging APIs to Pake's Rust commands so

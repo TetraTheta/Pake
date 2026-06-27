@@ -391,6 +391,10 @@ export default abstract class BaseBuilder {
       }
     }
 
+    if (this.options.webviewDevtools) {
+      features.push('webview-devtools');
+    }
+
     return features;
   }
 

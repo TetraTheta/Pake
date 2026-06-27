@@ -67,6 +67,14 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
     .option('--debug', 'Debug build and more output', DEFAULT.debug)
     .addOption(
       new Option(
+        '--webview-devtools',
+        'Enable WebView developer tools in release builds',
+      )
+        .default(DEFAULT.webviewDevtools)
+        .hideHelp(),
+    )
+    .addOption(
+      new Option(
         '--proxy-url <url>',
         'Proxy URL for all network requests (http://, https://, socks5://)',
       )

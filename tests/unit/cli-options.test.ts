@@ -82,6 +82,24 @@ describe('CLI options', () => {
     expect(option?.hidden).toBe(true);
   });
 
+  it('registers hidden --portable option', () => {
+    const option = program.options.find((item) => item.long === '--portable');
+
+    expect(option).toBeDefined();
+    expect(option?.defaultValue).toBe(false);
+    expect(option?.hidden).toBe(true);
+  });
+
+  it('registers hidden --webview-devtools option', () => {
+    const option = program.options.find(
+      (item) => item.long === '--webview-devtools',
+    );
+
+    expect(option).toBeDefined();
+    expect(option?.defaultValue).toBe(false);
+    expect(option?.hidden).toBe(true);
+  });
+
   it('registers hidden --enable-find option', () => {
     const option = program.options.find(
       (item) => item.long === '--enable-find',
