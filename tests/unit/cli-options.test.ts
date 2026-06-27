@@ -67,6 +67,14 @@ describe('CLI options', () => {
     expect(option?.hidden).toBeFalsy();
   });
 
+  it('exposes --tray mode option', () => {
+    const option = program.options.find((item) => item.long === '--tray');
+
+    expect(option).toBeDefined();
+    expect(option?.defaultValue).toBe('minimized');
+    expect(option?.hidden).toBeFalsy();
+  });
+
   it('registers hidden --identifier option', () => {
     const option = program.options.find((item) => item.long === '--identifier');
 

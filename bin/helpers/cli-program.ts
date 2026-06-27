@@ -129,6 +129,14 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         .hideHelp(),
     )
     .addOption(
+      new Option(
+        '--tray <mode>',
+        'System tray policy: always, minimized, or never',
+      )
+        .choices(['always', 'minimized', 'never'])
+        .default(DEFAULT.tray),
+    )
+    .addOption(
       new Option('--show-system-tray', 'Show system tray in app')
         .default(DEFAULT.showSystemTray)
         .hideHelp(),

@@ -75,8 +75,7 @@ First-time packaging requires environment setup and may be slower, subsequent bu
 
 ### Icon Sizes
 
-Pake auto-fetches website icons when `--icon` is not provided, then converts them into the platform format below. For Windows `.ico` files passed directly with `--icon`, exact PNG frames are kept when present; missing sizes are generated from the largest decodable frame.
-Pake does not ship or embed a fallback tray icon. If no website favicon or custom icon is resolved, no tray icon is created and the app opens as a normal window.
+Pake auto-fetches website icons when `--icon` is not provided, then converts them into the platform format below. For Windows `.ico` files passed directly with `--icon`, exact PNG frames are kept when present; missing sizes are generated from the largest decodable frame. By default, the tray uses the embedded app icon and appears only while the window is minimized to tray.
 
 | Platform         | Output icon      | Sizes                           |
 | ---------------- | ---------------- | ------------------------------- |

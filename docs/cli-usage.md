@@ -46,7 +46,7 @@ pake https://github.com --name "GitHub"
 pake https://weekly.tw93.fun --name "Weekly" --icon https://cdn.tw93.fun/pake/weekly.icns --width 1200 --height 800 --hide-title-bar
 
 # Complete example with multiple options
-pake https://github.com --name "GitHub Desktop" --width 1400 --height 900 --show-system-tray --debug
+pake https://github.com --name "GitHub Desktop" --width 1400 --height 900 --tray always --debug
 
 ```
 
@@ -344,10 +344,32 @@ Customize the browser user agent. Default is empty.
 --user-agent <string>
 ```
 
+#### [tray]
+
+Set when the system tray icon is visible. Default is `minimized`.
+
+- `always`: show the tray icon while the app is running.
+- `minimized`: show the tray icon only while the window is minimized to tray.
+- `never`: never show the tray icon; `Cmd/Ctrl+W` closes the window instead of hiding it to tray.
+
+Pake uses `--system-tray-icon` when set. Otherwise the tray uses the embedded app icon generated from the website favicon or `--icon`.
+
+```shell
+--tray <always|minimized|never>
+
+# Keep tray visible
+--tray always
+
+# Default: show tray only while minimized to tray
+--tray minimized
+
+# Disable tray behavior
+--tray never
+```
+
 #### [show-system-tray]
 
-Display the application in system tray. Default is `false`.
-Pake uses the website favicon or `--icon` result as the tray icon when `--system-tray-icon` is not set. It does not embed a fallback tray icon; if no icon is resolved, no tray icon is created and the app opens normally.
+Legacy alias for `--tray always`.
 
 ```shell
 --show-system-tray
@@ -355,7 +377,7 @@ Pake uses the website favicon or `--icon` result as the tray icon when `--system
 
 #### [system-tray-icon]
 
-Specify the system tray icon. This is only effective when the system tray is enabled. The icon must be in `.ico` or `.png` format and should be an image with dimensions ranging from 32x32 to 256x256 pixels.
+Specify a custom system tray icon. This is only effective when `--tray` is `always` or `minimized`. The icon must be in `.ico` or `.png` format and should be an image with dimensions ranging from 32x32 to 256x256 pixels.
 
 ```shell
 --system-tray-icon <path>
@@ -376,17 +398,17 @@ Hide window instead of closing the application when clicking close button. Platf
 
 #### [start-to-tray]
 
-Start the application minimized to system tray instead of showing the window. Must be used with `--show-system-tray`. Default is `false`.
+Start the application minimized to system tray instead of showing the window. Must be used with `--tray always` or `--tray minimized`. Default is `false`.
 If no tray icon is available, there is no tray target to start hidden to, so the window opens normally.
 
 ```shell
 --start-to-tray
 
-# Example: Start hidden to tray (must use with --show-system-tray)
-pake https://github.com --name GitHub --show-system-tray --start-to-tray
+# Example: Start hidden to tray
+pake https://github.com --name GitHub --tray minimized --start-to-tray
 ```
 
-**Note**: Double-click the tray icon to show/hide the window. If used without `--show-system-tray`, this option is ignored.
+**Note**: Double-click the tray icon to show/hide the window. If used with `--tray never`, this option is ignored.
 
 #### [title]
 

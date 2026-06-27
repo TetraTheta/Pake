@@ -15,6 +15,7 @@ export const DEFAULT_PAKE_OPTIONS: PakeCliOptions = {
   activationShortcut: '',
   userAgent: '',
   showSystemTray: false,
+  tray: 'minimized',
   multiArch: false,
   targets: (() => {
     switch (process.platform) {

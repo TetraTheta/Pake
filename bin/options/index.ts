@@ -86,6 +86,11 @@ export default async function handleOptions(
     identifier: resolveIdentifier(url, options.name, options.identifier),
   };
 
+  if (options.showSystemTray) {
+    appOptions.tray = 'always';
+  }
+  appOptions.showSystemTray = appOptions.tray !== 'never';
+
   // --safe-domain is sugar over --internal-url-regex; an explicit regex wins.
   if (!options.internalUrlRegex && options.safeDomain) {
     appOptions.internalUrlRegex = safeDomainsToRegex(options.safeDomain);

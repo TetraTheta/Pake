@@ -33,6 +33,7 @@ export function buildWindowConfigOverrides(
   const platformHideOnClose = options.hideOnClose ?? platform === 'darwin';
   const platformHideTitleBar =
     platform === 'darwin' ? options.hideTitleBar : false;
+  const trayEnabled = options.tray !== 'never';
   return {
     width: options.width,
     height: options.height,
@@ -49,7 +50,7 @@ export function buildWindowConfigOverrides(
     title: options.title,
     enable_wasm: options.wasm,
     enable_drag_drop: options.enableDragDrop,
-    start_to_tray: options.startToTray && options.showSystemTray,
+    start_to_tray: options.startToTray && trayEnabled,
     force_internal_navigation: options.forceInternalNavigation,
     internal_url_regex: options.internalUrlRegex,
     enable_find: options.enableFind,
@@ -67,6 +68,18 @@ type PlatformIconInfo = {
   path: string;
   message: string;
 };
+
+export function getDefaultTrayIconPath(
+  platform: SupportedPlatform,
+  safeAppName: string,
+  macTrayIconExists = false,
+): string {
+  if (platform !== 'darwin') {
+    return '';
+  }
+
+  return macTrayIconExists ? `png/${safeAppName}_512.png` : '';
+}
 
 function asSupportedPlatform(platform: NodeJS.Platform): SupportedPlatform {
   if (platform !== 'win32' && platform !== 'darwin' && platform !== 'linux') {
@@ -298,8 +311,9 @@ async function mergeIcons(
     );
   }
 
-  // Set tray icon path.
-  let trayIconPath = tauriConf.bundle.icon?.[0] ?? '';
+  // Empty means "use Tauri's embedded default window icon" at runtime.
+  // This keeps portable Windows builds independent from bundled resource files.
+  let trayIconPath = getDefaultTrayIconPath(platform, safeAppName);
   if (platform === 'darwin') {
     const macTrayIconPath = `png/${safeAppName}_512.png`;
     const absoluteMacTrayIconPath = path.join(
@@ -307,21 +321,26 @@ async function mergeIcons(
       'src-tauri',
       macTrayIconPath,
     );
-    trayIconPath = (await fsExtra.pathExists(absoluteMacTrayIconPath))
-      ? macTrayIconPath
-      : '';
+    trayIconPath = getDefaultTrayIconPath(
+      platform,
+      safeAppName,
+      await fsExtra.pathExists(absoluteMacTrayIconPath),
+    );
   }
   if (options.systemTrayIcon.length > 0) {
     try {
-      await fsExtra.pathExists(options.systemTrayIcon);
-      const iconExt = path.extname(options.systemTrayIcon).toLowerCase();
+      const resolvedTrayIconPath = path.resolve(options.systemTrayIcon);
+      if (!(await fsExtra.pathExists(resolvedTrayIconPath))) {
+        throw new Error('file does not exist');
+      }
+      const iconExt = path.extname(resolvedTrayIconPath).toLowerCase();
       if (iconExt === '.png' || iconExt === '.ico') {
         const trayIcoPath = path.join(
           npmDirectory,
           `src-tauri/png/${safeAppName}${iconExt}`,
         );
         trayIconPath = `png/${safeAppName}${iconExt}`;
-        await fsExtra.copy(options.systemTrayIcon, trayIcoPath);
+        await fsExtra.copy(resolvedTrayIconPath, trayIcoPath);
       } else {
         logger.warn(
           `✼ System tray icon must be .ico or .png, but you provided ${iconExt}.`,
@@ -455,7 +474,6 @@ export async function mergeConfig(
   const {
     appVersion,
     userAgent,
-    showSystemTray,
     useLocalFile,
     identifier,
     name = 'pake-app',
@@ -507,7 +525,8 @@ export async function mergeConfig(
   if (userAgent.length > 0) {
     tauriConf.pake.user_agent[currentPlatform] = userAgent;
   }
-  tauriConf.pake.system_tray[currentPlatform] = showSystemTray;
+  tauriConf.pake.system_tray[currentPlatform] = options.tray !== 'never';
+  tauriConf.pake.tray_icon_mode = options.tray;
 
   if (platform === 'linux') {
     await mergeLinuxConfig(options, name, tauriConf, linuxBinaryName);

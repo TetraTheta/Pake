@@ -425,7 +425,7 @@ pake https://example.com --icon ./icon.png
 
 Pake can automatically convert icons, but providing the correct format is more reliable.
 
-Pake does not ship a fallback tray icon. If neither the website favicon nor `--icon` resolves to a usable icon, `--show-system-tray` has no tray icon to display and the app opens as a normal window.
+The tray uses the embedded app icon by default. Use `--tray always` to keep it visible, `--tray minimized` to show it only while minimized to tray, or `--tray never` to disable tray behavior.
 
 ---
 

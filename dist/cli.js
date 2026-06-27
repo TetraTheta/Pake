@@ -432,6 +432,7 @@ function needsTemporaryDebForZst(targets) {
 function buildWindowConfigOverrides(options, platform = asSupportedPlatform(process.platform)) {
     const platformHideOnClose = options.hideOnClose ?? platform === 'darwin';
     const platformHideTitleBar = platform === 'darwin' ? options.hideTitleBar : false;
+    const trayEnabled = options.tray !== 'never';
     return {
         width: options.width,
         height: options.height,
@@ -448,7 +449,7 @@ function buildWindowConfigOverrides(options, platform = asSupportedPlatform(proc
         title: options.title,
         enable_wasm: options.wasm,
         enable_drag_drop: options.enableDragDrop,
-        start_to_tray: options.startToTray && options.showSystemTray,
+        start_to_tray: options.startToTray && trayEnabled,
         force_internal_navigation: options.forceInternalNavigation,
         internal_url_regex: options.internalUrlRegex,
         enable_find: options.enableFind,
@@ -459,6 +460,12 @@ function buildWindowConfigOverrides(options, platform = asSupportedPlatform(proc
         new_window: options.newWindow,
         webview_devtools: options.webviewDevtools,
     };
+}
+function getDefaultTrayIconPath(platform, safeAppName, macTrayIconExists = false) {
+    if (platform !== 'darwin') {
+        return '';
+    }
+    return macTrayIconExists ? `png/${safeAppName}_512.png` : '';
 }
 function asSupportedPlatform(platform) {
     if (platform !== 'win32' && platform !== 'darwin' && platform !== 'linux') {
@@ -633,23 +640,25 @@ async function mergeIcons(options, name, tauriConf, platform, safeAppName) {
     if (platform === 'win32' && tauriConf.bundle.icon?.[0]) {
         await fsExtra.copy(path.join(npmDirectory, 'src-tauri', tauriConf.bundle.icon[0]), path.join(npmDirectory, 'src-tauri', 'icons', 'icon.ico'));
     }
-    // Set tray icon path.
-    let trayIconPath = tauriConf.bundle.icon?.[0] ?? '';
+    // Empty means "use Tauri's embedded default window icon" at runtime.
+    // This keeps portable Windows builds independent from bundled resource files.
+    let trayIconPath = getDefaultTrayIconPath(platform, safeAppName);
     if (platform === 'darwin') {
         const macTrayIconPath = `png/${safeAppName}_512.png`;
         const absoluteMacTrayIconPath = path.join(npmDirectory, 'src-tauri', macTrayIconPath);
-        trayIconPath = (await fsExtra.pathExists(absoluteMacTrayIconPath))
-            ? macTrayIconPath
-            : '';
+        trayIconPath = getDefaultTrayIconPath(platform, safeAppName, await fsExtra.pathExists(absoluteMacTrayIconPath));
     }
     if (options.systemTrayIcon.length > 0) {
         try {
-            await fsExtra.pathExists(options.systemTrayIcon);
-            const iconExt = path.extname(options.systemTrayIcon).toLowerCase();
+            const resolvedTrayIconPath = path.resolve(options.systemTrayIcon);
+            if (!(await fsExtra.pathExists(resolvedTrayIconPath))) {
+                throw new Error('file does not exist');
+            }
+            const iconExt = path.extname(resolvedTrayIconPath).toLowerCase();
             if (iconExt === '.png' || iconExt === '.ico') {
                 const trayIcoPath = path.join(npmDirectory, `src-tauri/png/${safeAppName}${iconExt}`);
                 trayIconPath = `png/${safeAppName}${iconExt}`;
-                await fsExtra.copy(options.systemTrayIcon, trayIcoPath);
+                await fsExtra.copy(resolvedTrayIconPath, trayIcoPath);
             }
             else {
                 logger.warn(`✼ System tray icon must be .ico or .png, but you provided ${iconExt}.`);
@@ -731,7 +740,7 @@ async function writeAllConfigs(tauriConf, platform) {
 }
 async function mergeConfig(url, options, tauriConf) {
     await copyTemplateConfigs();
-    const { appVersion, userAgent, showSystemTray, useLocalFile, identifier, name = 'pake-app', installerLanguage, wasm, camera, microphone, } = options;
+    const { appVersion, userAgent, useLocalFile, identifier, name = 'pake-app', installerLanguage, wasm, camera, microphone, } = options;
     const platform = asSupportedPlatform(process.platform);
     if (options.hideTitleBar && platform !== 'darwin') {
         logger.warn('✼ --hide-title-bar is only supported on macOS and will be ignored on this platform.');
@@ -764,7 +773,8 @@ async function mergeConfig(url, options, tauriConf) {
     if (userAgent.length > 0) {
         tauriConf.pake.user_agent[currentPlatform] = userAgent;
     }
-    tauriConf.pake.system_tray[currentPlatform] = showSystemTray;
+    tauriConf.pake.system_tray[currentPlatform] = options.tray !== 'never';
+    tauriConf.pake.tray_icon_mode = options.tray;
     if (platform === 'linux') {
         await mergeLinuxConfig(options, name, tauriConf, linuxBinaryName);
     }
@@ -2554,6 +2564,10 @@ async function handleOptions(options, url) {
         name: resolvedName,
         identifier: resolveIdentifier(url, options.name, options.identifier),
     };
+    if (options.showSystemTray) {
+        appOptions.tray = 'always';
+    }
+    appOptions.showSystemTray = appOptions.tray !== 'never';
     // --safe-domain is sugar over --internal-url-regex; an explicit regex wins.
     if (!options.internalUrlRegex && options.safeDomain) {
         appOptions.internalUrlRegex = safeDomainsToRegex(options.safeDomain);
@@ -2577,6 +2591,7 @@ const DEFAULT_PAKE_OPTIONS = {
     activationShortcut: '',
     userAgent: '',
     showSystemTray: false,
+    tray: 'minimized',
     multiArch: false,
     targets: (() => {
         switch (process.platform) {
@@ -2713,6 +2728,9 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         .addOption(new Option('--activation-shortcut <string>', 'Shortcut key to active App')
         .default(DEFAULT_PAKE_OPTIONS.activationShortcut)
         .hideHelp())
+        .addOption(new Option('--tray <mode>', 'System tray policy: always, minimized, or never')
+        .choices(['always', 'minimized', 'never'])
+        .default(DEFAULT_PAKE_OPTIONS.tray))
         .addOption(new Option('--show-system-tray', 'Show system tray in app')
         .default(DEFAULT_PAKE_OPTIONS.showSystemTray)
         .hideHelp())

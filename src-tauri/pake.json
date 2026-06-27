@@ -34,6 +34,7 @@
     "linux": true,
     "windows": true
   },
+  "tray_icon_mode": "minimized",
   "system_tray_path": "",
   "inject": [],
   "proxy_url": "",

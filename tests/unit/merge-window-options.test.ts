@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { buildWindowConfigOverrides } from '../../bin/helpers/merge';
+import {
+  buildWindowConfigOverrides,
+  getDefaultTrayIconPath,
+} from '../../bin/helpers/merge';
 import { DEFAULT_PAKE_OPTIONS } from '../../bin/defaults';
 import type { PakeAppOptions } from '../../bin/types';
 
@@ -79,16 +82,22 @@ describe('buildWindowConfigOverrides', () => {
     ).toBe(false);
   });
 
-  it('only enables start_to_tray when both flag and tray are on', () => {
+  it('only enables start_to_tray when tray mode is not never', () => {
     expect(
       buildWindowConfigOverrides(
-        makeOptions({ startToTray: true, showSystemTray: false }),
+        makeOptions({ startToTray: true, tray: 'never' }),
         'darwin',
       ).start_to_tray,
     ).toBe(false);
     expect(
       buildWindowConfigOverrides(
-        makeOptions({ startToTray: true, showSystemTray: true }),
+        makeOptions({ startToTray: true, tray: 'minimized' }),
+        'darwin',
+      ).start_to_tray,
+    ).toBe(true);
+    expect(
+      buildWindowConfigOverrides(
+        makeOptions({ startToTray: true, tray: 'always' }),
         'darwin',
       ).start_to_tray,
     ).toBe(true);
@@ -126,5 +135,19 @@ describe('buildWindowConfigOverrides', () => {
       force_internal_navigation: true,
       internal_url_regex: '^https://example\\.com',
     });
+  });
+});
+
+describe('getDefaultTrayIconPath', () => {
+  it('uses the embedded default window icon on Windows and Linux', () => {
+    expect(getDefaultTrayIconPath('win32', 'demo', true)).toBe('');
+    expect(getDefaultTrayIconPath('linux', 'demo', true)).toBe('');
+  });
+
+  it('keeps the generated PNG tray icon path on macOS only when present', () => {
+    expect(getDefaultTrayIconPath('darwin', 'demo', true)).toBe(
+      'png/demo_512.png',
+    );
+    expect(getDefaultTrayIconPath('darwin', 'demo', false)).toBe('');
   });
 });

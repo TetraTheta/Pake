@@ -1,5 +1,6 @@
 export type SupportedPlatform = 'win32' | 'darwin' | 'linux';
 export type TauriPlatform = 'windows' | 'macos' | 'linux';
+export type TrayIconMode = 'always' | 'minimized' | 'never';
 
 export interface PakeCliOptions {
   // Application name
@@ -50,8 +51,11 @@ export interface PakeCliOptions {
   // Custom User-Agent, default off
   userAgent: string;
 
-  // Enable system tray, default off for macOS, on for Windows and Linux
+  // Legacy alias for tray mode "always"
   showSystemTray: boolean;
+
+  // System tray display policy
+  tray: TrayIconMode;
 
   // Tray icon, default same as app icon for Windows and Linux, macOS requires separate png or ico
   systemTrayIcon: string;
@@ -192,6 +196,7 @@ export interface PakeConfig {
   windows: WindowConfig[];
   user_agent: PlatformSpecific<string>;
   system_tray: PlatformSpecific<boolean>;
+  tray_icon_mode: TrayIconMode;
   system_tray_path: string;
   proxy_url: string;
   multi_instance: boolean;
