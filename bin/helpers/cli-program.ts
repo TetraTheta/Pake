@@ -16,37 +16,37 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
   return program
     .addHelpText('beforeAll', logo)
     .usage(`[url] [options]`)
-    .helpOption('-h, --help', 'Show all CLI options')
+    .helpOption('-h, --help', 'Show help')
     .showHelpAfterError()
-    .argument('[url]', 'The web URL you want to package', validateUrlInput)
-    .option('--name <string>', 'Application name')
+    .argument('[url]', 'Web URL or local HTML file to package', validateUrlInput)
+    .option('--name <string>', 'App name shown by the OS')
     .addOption(
       new Option(
         '--identifier <string>',
-        'Application identifier / bundle ID',
+        'App identifier / bundle ID',
       ).hideHelp(),
     )
-    .option('--icon <string>', 'Application icon', DEFAULT.icon)
+    .option('--icon <string>', 'Custom app icon file or URL', DEFAULT.icon)
     .option(
       '--width <number>',
-      'Window width',
+      'Initial window width in pixels',
       validateNumberInput,
       DEFAULT.width,
     )
     .option(
       '--height <number>',
-      'Window height',
+      'Initial window height in pixels',
       validateNumberInput,
       DEFAULT.height,
     )
     .option(
       '--use-local-file',
-      'Use local file packaging',
+      'Copy local HTML assets into the app bundle',
       DEFAULT.useLocalFile,
     )
-    .option('--fullscreen', 'Start in full screen', DEFAULT.fullscreen)
-    .option('--hide-title-bar', 'For Mac, hide title bar', DEFAULT.hideTitleBar)
-    .option('--multi-arch', 'For Mac, both Intel and M1', DEFAULT.multiArch)
+    .option('--fullscreen', 'Start the window in fullscreen', DEFAULT.fullscreen)
+    .option('--hide-title-bar', 'Hide the macOS title bar', DEFAULT.hideTitleBar)
+    .option('--multi-arch', 'Build a universal macOS binary', DEFAULT.multiArch)
     .option(
       '--inject <files>',
       'Inject local CSS/JS files into the page',
@@ -64,7 +64,7 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
       },
       DEFAULT.inject,
     )
-    .option('--debug', 'Debug build and more output', DEFAULT.debug)
+    .option('--debug', 'Build a debug app with verbose output', DEFAULT.debug)
     .addOption(
       new Option(
         '--webview-devtools',
@@ -89,19 +89,19 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
     .addOption(
       new Option(
         '--targets <string>',
-        'Build target format for your system',
+        'Output target for the current platform',
       ).default(DEFAULT.targets),
     )
     .addOption(
       new Option(
         '--app-version <string>',
-        'App version, the same as package.json version',
+        'App version written to Tauri metadata',
       )
         .default(DEFAULT.appVersion)
         .hideHelp(),
     )
     .addOption(
-      new Option('--always-on-top', 'Always on the top level')
+      new Option('--always-on-top', 'Keep the window above other windows')
         .default(DEFAULT.alwaysOnTop)
         .hideHelp(),
     )
@@ -119,30 +119,28 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         .hideHelp(),
     )
     .addOption(
-      new Option('--disabled-web-shortcuts', 'Disabled webPage shortcuts')
+      new Option('--disabled-web-shortcuts', 'Disable common web keyboard shortcuts')
         .default(DEFAULT.disabledWebShortcuts)
         .hideHelp(),
     )
     .addOption(
-      new Option('--activation-shortcut <string>', 'Shortcut key to active App')
+      new Option('--activation-shortcut <string>', 'Global shortcut that restores the app')
         .default(DEFAULT.activationShortcut)
         .hideHelp(),
     )
     .addOption(
       new Option(
         '--tray <mode>',
-        'System tray policy: always, minimized, or never',
+        'Tray visibility: always, minimized, or never',
       )
         .choices(['always', 'minimized', 'never'])
         .default(DEFAULT.tray),
     )
     .addOption(
-      new Option('--show-system-tray', 'Show system tray in app')
-        .default(DEFAULT.showSystemTray)
-        .hideHelp(),
-    )
-    .addOption(
-      new Option('--system-tray-icon <string>', 'Custom system tray icon')
+      new Option(
+        '--system-tray-icon <string>',
+        'macOS-only tray icon override; other platforms ignore it',
+      )
         .default(DEFAULT.systemTrayIcon)
         .hideHelp(),
     )
@@ -160,24 +158,24 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         })
         .hideHelp(),
     )
-    .addOption(new Option('--title <string>', 'Window title').hideHelp())
+    .addOption(new Option('--title <string>', 'Window title override').hideHelp())
     .addOption(
-      new Option('--incognito', 'Launch app in incognito/private mode')
+      new Option('--incognito', 'Use a private webview session')
         .default(DEFAULT.incognito)
         .hideHelp(),
     )
     .addOption(
-      new Option('--wasm', 'Enable WebAssembly support (Flutter Web, etc.)')
+      new Option('--wasm', 'Enable WebAssembly support')
         .default(DEFAULT.wasm)
         .hideHelp(),
     )
     .addOption(
-      new Option('--enable-drag-drop', 'Enable drag and drop functionality')
+      new Option('--enable-drag-drop', 'Enable webview drag and drop')
         .default(DEFAULT.enableDragDrop)
         .hideHelp(),
     )
     .addOption(
-      new Option('--keep-binary', 'Keep raw binary file alongside installer')
+      new Option('--keep-binary', 'Copy the raw executable next to the installer')
         .default(DEFAULT.keepBinary)
         .hideHelp(),
     )
@@ -190,39 +188,39 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         .hideHelp(),
     )
     .addOption(
-      new Option('--multi-instance', 'Allow multiple app instances')
+      new Option('--multi-instance', 'Allow multiple app processes')
         .default(DEFAULT.multiInstance)
         .hideHelp(),
     )
     .addOption(
       new Option(
         '--multi-window',
-        'Allow opening multiple windows within one app instance',
+        'Allow one app process to open multiple windows',
       )
         .default(DEFAULT.multiWindow)
         .hideHelp(),
     )
     .addOption(
-      new Option('--start-to-tray', 'Start app minimized to tray')
+      new Option('--start-to-tray', 'Start hidden in the tray when tray is enabled')
         .default(DEFAULT.startToTray)
         .hideHelp(),
     )
     .addOption(
       new Option(
         '--force-internal-navigation',
-        'Keep every link inside the Pake window instead of opening external handlers',
+        'Keep all navigation inside the Pake window',
       ).default(DEFAULT.forceInternalNavigation),
     )
     .addOption(
       new Option(
         '--internal-url-regex <string>',
-        'Regex pattern to match URLs that should be considered internal',
+        'Regex for URLs that should stay inside the app',
       ).default(DEFAULT.internalUrlRegex),
     )
     .addOption(
       new Option(
         '--safe-domain <domains>',
-        'Comma-separated domains kept inside the app (e.g. SSO/workspace callbacks)',
+        'Comma-separated domains kept inside the app',
       ).default(DEFAULT.safeDomain),
     )
     .addOption(
@@ -234,7 +232,7 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         .hideHelp(),
     )
     .addOption(
-      new Option('--installer-language <string>', 'Installer language')
+      new Option('--installer-language <string>', 'Windows installer language')
         .default(DEFAULT.installerLanguage)
         .hideHelp(),
     )
@@ -273,7 +271,7 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
     .addOption(
       new Option(
         '--iterative-build',
-        'Turn on rapid build mode (app only, no dmg/deb/nsis), good for debugging',
+        'Build app bundle only for faster local iteration',
       )
         .default(DEFAULT.iterativeBuild)
         .hideHelp(),

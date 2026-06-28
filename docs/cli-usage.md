@@ -76,16 +76,17 @@ The URL is the link to the web page you want to package or the path to a local H
 
 Various options are available for customization. `pake --help` shows every supported CLI option. This page is the complete reference.
 
-| Option             | Description                                     | Example                                        |
-| ------------------ | ----------------------------------------------- | ---------------------------------------------- |
-| `--name`           | Application name                                | `--name "Weekly"`                              |
-| `--icon`           | Custom icon (optional, auto-fetch website icon) | `--icon https://cdn.tw93.fun/pake/weekly.icns` |
-| `--width`          | Window width (default: 1200px)                  | `--width 1400`                                 |
-| `--height`         | Window height (default: 780px)                  | `--height 900`                                 |
-| `--hide-title-bar` | Immersive header (macOS only)                   | `--hide-title-bar`                             |
-| `--debug`          | Enable development tools                        | `--debug`                                      |
-| `--help`           | Show all CLI options                            | `--help`                                       |
-| `--version`        | Show CLI version                                | `--version`                                    |
+| Option             | Description                                           | Example                                        |
+| ------------------ | ----------------------------------------------------- | ---------------------------------------------- |
+| `--name`           | App name shown by the OS                              | `--name "Weekly"`                              |
+| `--icon`           | Custom app icon file or URL; otherwise auto-detected  | `--icon https://cdn.tw93.fun/pake/weekly.icns` |
+| `--width`          | Initial window width (default: 1200px)                | `--width 1400`                                 |
+| `--height`         | Initial window height (default: 780px)                | `--height 900`                                 |
+| `--hide-title-bar` | Hide the macOS title bar                              | `--hide-title-bar`                             |
+| `--tray`           | Tray visibility: `always`, `minimized`, or `never`    | `--tray always`                                |
+| `--debug`          | Build a debug app with verbose output                 | `--debug`                                      |
+| `--help`           | Show help                                             | `--help`                                       |
+| `--version`        | Show CLI version                                      | `--version`                                    |
 
 For complete options, see detailed sections below.
 
@@ -362,13 +363,13 @@ Customize the browser user agent. Default is empty.
 
 #### [tray]
 
-Set when the system tray icon is visible. Default is `minimized`.
+Controls when Pake creates a system tray icon. Default is `minimized`.
 
-- `always`: show the tray icon while the app is running.
-- `minimized`: show the tray icon only while the window is minimized to tray.
-- `never`: never show the tray icon; `Cmd/Ctrl+W` closes the window instead of hiding it to tray.
+- `always`: create the tray icon as soon as the app starts.
+- `minimized`: create the tray icon only when the window is hidden/minimized to tray.
+- `never`: disable tray behavior. Close actions exit or close the window instead of hiding to tray.
 
-Pake uses `--system-tray-icon` when set. Otherwise the tray uses the embedded app icon generated from the website favicon or `--icon`.
+The tray uses the app icon generated from `--icon`, the website favicon, or the fallback icon. On macOS only, `--system-tray-icon` can override the tray icon without changing the app icon.
 
 ```shell
 --tray <always|minimized|never>
@@ -383,20 +384,17 @@ Pake uses `--system-tray-icon` when set. Otherwise the tray uses the embedded ap
 --tray never
 ```
 
-#### [show-system-tray]
-
-Legacy alias for `--tray always`.
-
-```shell
---show-system-tray
-```
-
 #### [system-tray-icon]
 
-Specify a custom system tray icon. This is only effective when `--tray` is `always` or `minimized`. The icon must be in `.ico` or `.png` format and should be an image with dimensions ranging from 32x32 to 256x256 pixels.
+macOS only. Use a separate menu bar/tray icon without changing the app icon. On Windows and Linux this option is ignored with a warning because tray/taskbar/window icons are derived from the app icon.
+
+Use `.png` when possible; `.ico` is accepted for compatibility.
 
 ```shell
 --system-tray-icon <path>
+
+# Example: macOS menu bar icon override
+pake https://github.com --name GitHub --system-tray-icon ./tray.png
 ```
 
 #### [hide-on-close]
@@ -582,7 +580,7 @@ Set proxy server for all network requests. Supports HTTP, HTTPS, and SOCKS5. Ava
 
 #### [debug]
 
-Enable developer tools and detailed logging for debugging.
+Build a debug app with verbose output.
 
 ```shell
 --debug

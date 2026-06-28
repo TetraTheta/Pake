@@ -467,7 +467,7 @@ pake https://example.com --icon ./icon.png
 
 Pake can automatically convert icons, but providing the correct format is more reliable.
 
-The tray uses the embedded app icon by default. Use `--tray always` to keep it visible, `--tray minimized` to show it only while minimized to tray, or `--tray never` to disable tray behavior.
+The tray uses the embedded app icon by default. Use `--tray always` to keep it visible, `--tray minimized` to show it only while minimized to tray, or `--tray never` to disable tray behavior. On macOS only, `--system-tray-icon` can set a separate menu bar icon.
 
 ---
 

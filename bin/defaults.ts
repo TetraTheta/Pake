@@ -15,8 +15,8 @@ export const DEFAULT_PAKE_OPTIONS: PakeCliOptions = {
   disabledWebShortcuts: false,
   activationShortcut: '',
   userAgent: '',
-  showSystemTray: false,
   tray: 'minimized',
+  systemTrayIcon: '',
   multiArch: false,
   targets: (() => {
     switch (process.platform) {
@@ -31,7 +31,6 @@ export const DEFAULT_PAKE_OPTIONS: PakeCliOptions = {
     }
   })(),
   useLocalFile: false,
-  systemTrayIcon: '',
   proxyUrl: '',
   debug: false,
   webviewDevtools: false,

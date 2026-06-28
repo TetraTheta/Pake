@@ -51,13 +51,10 @@ export interface PakeCliOptions {
   // Custom User-Agent, default off
   userAgent: string;
 
-  // Legacy alias for tray mode "always"
-  showSystemTray: boolean;
-
   // System tray display policy
   tray: TrayIconMode;
 
-  // Tray icon, default same as app icon for Windows and Linux, macOS requires separate png or ico
+  // macOS-only tray icon override; other platforms derive tray icons from the app icon
   systemTrayIcon: string;
 
   // Recursive copy, when url is a local file path, if this option is enabled, the url path file and all its subFiles will be copied to the pake static file folder, default off

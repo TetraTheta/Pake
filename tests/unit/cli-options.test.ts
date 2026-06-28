@@ -73,6 +73,28 @@ describe('CLI options', () => {
     expect(option).toBeDefined();
     expect(option?.defaultValue).toBe('minimized');
     expect(option?.hidden).toBeFalsy();
+    expect(option?.argChoices).toEqual(['always', 'minimized', 'never']);
+  });
+
+  it('does not register removed tray aliases', () => {
+    expect(
+      program.options.find((item) => item.long === '--show-system-tray'),
+    ).toBeUndefined();
+    expect(
+      program.options
+        .find((item) => item.long === '--tray')
+        ?.argChoices?.includes('none'),
+    ).toBe(false);
+  });
+
+  it('registers macOS-only --system-tray-icon override', () => {
+    const option = program.options.find(
+      (item) => item.long === '--system-tray-icon',
+    );
+
+    expect(option).toBeDefined();
+    expect(option?.defaultValue).toBe('');
+    expect(option?.description).toContain('macOS-only');
   });
 
   it('registers hidden --identifier option', () => {

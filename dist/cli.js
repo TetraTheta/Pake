@@ -736,25 +736,30 @@ async function mergeIcons(options, name, tauriConf, platform, safeAppName) {
         trayIconPath = getDefaultTrayIconPath(platform, safeAppName, await fsExtra.pathExists(absoluteMacTrayIconPath));
     }
     if (options.systemTrayIcon.length > 0) {
-        try {
-            const resolvedTrayIconPath = path.resolve(options.systemTrayIcon);
-            if (!(await fsExtra.pathExists(resolvedTrayIconPath))) {
-                throw new Error('file does not exist');
-            }
-            const iconExt = path.extname(resolvedTrayIconPath).toLowerCase();
-            if (iconExt === '.png' || iconExt === '.ico') {
-                const trayIcoPath = path.join(npmDirectory, `src-tauri/png/${safeAppName}${iconExt}`);
-                trayIconPath = `png/${safeAppName}${iconExt}`;
-                await fsExtra.copy(resolvedTrayIconPath, trayIcoPath);
-            }
-            else {
-                logger.warn(`✼ System tray icon must be .ico or .png, but you provided ${iconExt}.`);
-                logger.warn(`✼ No system tray icon will be configured.`);
-            }
+        if (platform !== 'darwin') {
+            logger.warn('✼ --system-tray-icon is only supported on macOS and will be ignored on this platform.');
         }
-        catch (err) {
-            logger.warn(`✼ Failed to apply system tray icon "${options.systemTrayIcon}": ${err instanceof Error ? err.message : String(err)}`);
-            logger.warn(`✼ System tray icon will remain unchanged.`);
+        else {
+            try {
+                const resolvedTrayIconPath = path.resolve(options.systemTrayIcon);
+                if (!(await fsExtra.pathExists(resolvedTrayIconPath))) {
+                    throw new Error('file does not exist');
+                }
+                const iconExt = path.extname(resolvedTrayIconPath).toLowerCase();
+                if (iconExt === '.png' || iconExt === '.ico') {
+                    const trayIconFile = `png/${safeAppName}${iconExt}`;
+                    trayIconPath = trayIconFile;
+                    await fsExtra.copy(resolvedTrayIconPath, path.join(npmDirectory, 'src-tauri', trayIconFile));
+                }
+                else {
+                    logger.warn(`✼ macOS tray icon must be .png or .ico, but you provided ${iconExt}.`);
+                    logger.warn('✼ The generated app icon will be used for the tray.');
+                }
+            }
+            catch (err) {
+                logger.warn(`✼ Failed to apply macOS tray icon "${options.systemTrayIcon}": ${err instanceof Error ? err.message : String(err)}`);
+                logger.warn('✼ The generated app icon will be used for the tray.');
+            }
         }
     }
     tauriConf.bundle.resources = trayIconPath ? [trayIconPath] : [];
@@ -2737,10 +2742,6 @@ async function handleOptions(options, url) {
         name: resolvedName,
         identifier: resolveIdentifier(url, options.name, options.identifier),
     };
-    if (options.showSystemTray) {
-        appOptions.tray = 'always';
-    }
-    appOptions.showSystemTray = appOptions.tray !== 'never';
     // --safe-domain is sugar over --internal-url-regex; an explicit regex wins.
     if (!options.internalUrlRegex && options.safeDomain) {
         appOptions.internalUrlRegex = safeDomainsToRegex(options.safeDomain);
@@ -2763,8 +2764,8 @@ const DEFAULT_PAKE_OPTIONS = {
     disabledWebShortcuts: false,
     activationShortcut: '',
     userAgent: '',
-    showSystemTray: false,
     tray: 'minimized',
+    systemTrayIcon: '',
     multiArch: false,
     targets: (() => {
         switch (process.platform) {
@@ -2779,7 +2780,6 @@ const DEFAULT_PAKE_OPTIONS = {
         }
     })(),
     useLocalFile: false,
-    systemTrayIcon: '',
     proxyUrl: '',
     debug: false,
     webviewDevtools: false,
@@ -2849,18 +2849,18 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
     return program$1
         .addHelpText('beforeAll', logo)
         .usage(`[url] [options]`)
-        .helpOption('-h, --help', 'Show all CLI options')
+        .helpOption('-h, --help', 'Show help')
         .showHelpAfterError()
-        .argument('[url]', 'The web URL you want to package', validateUrlInput)
-        .option('--name <string>', 'Application name')
-        .addOption(new Option('--identifier <string>', 'Application identifier / bundle ID').hideHelp())
-        .option('--icon <string>', 'Application icon', DEFAULT_PAKE_OPTIONS.icon)
-        .option('--width <number>', 'Window width', validateNumberInput, DEFAULT_PAKE_OPTIONS.width)
-        .option('--height <number>', 'Window height', validateNumberInput, DEFAULT_PAKE_OPTIONS.height)
-        .option('--use-local-file', 'Use local file packaging', DEFAULT_PAKE_OPTIONS.useLocalFile)
-        .option('--fullscreen', 'Start in full screen', DEFAULT_PAKE_OPTIONS.fullscreen)
-        .option('--hide-title-bar', 'For Mac, hide title bar', DEFAULT_PAKE_OPTIONS.hideTitleBar)
-        .option('--multi-arch', 'For Mac, both Intel and M1', DEFAULT_PAKE_OPTIONS.multiArch)
+        .argument('[url]', 'Web URL or local HTML file to package', validateUrlInput)
+        .option('--name <string>', 'App name shown by the OS')
+        .addOption(new Option('--identifier <string>', 'App identifier / bundle ID').hideHelp())
+        .option('--icon <string>', 'Custom app icon file or URL', DEFAULT_PAKE_OPTIONS.icon)
+        .option('--width <number>', 'Initial window width in pixels', validateNumberInput, DEFAULT_PAKE_OPTIONS.width)
+        .option('--height <number>', 'Initial window height in pixels', validateNumberInput, DEFAULT_PAKE_OPTIONS.height)
+        .option('--use-local-file', 'Copy local HTML assets into the app bundle', DEFAULT_PAKE_OPTIONS.useLocalFile)
+        .option('--fullscreen', 'Start the window in fullscreen', DEFAULT_PAKE_OPTIONS.fullscreen)
+        .option('--hide-title-bar', 'Hide the macOS title bar', DEFAULT_PAKE_OPTIONS.hideTitleBar)
+        .option('--multi-arch', 'Build a universal macOS binary', DEFAULT_PAKE_OPTIONS.multiArch)
         .option('--inject <files>', 'Inject local CSS/JS files into the page', (val, previous) => {
         if (!val)
             return DEFAULT_PAKE_OPTIONS.inject;
@@ -2872,7 +2872,7 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         // If previous values exist (from multiple --inject options), merge them
         return previous ? [...previous, ...files] : files;
     }, DEFAULT_PAKE_OPTIONS.inject)
-        .option('--debug', 'Debug build and more output', DEFAULT_PAKE_OPTIONS.debug)
+        .option('--debug', 'Build a debug app with verbose output', DEFAULT_PAKE_OPTIONS.debug)
         .addOption(new Option('--webview-devtools', 'Enable WebView developer tools in release builds')
         .default(DEFAULT_PAKE_OPTIONS.webviewDevtools)
         .hideHelp())
@@ -2882,11 +2882,11 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         .addOption(new Option('--user-agent <string>', 'Custom user agent')
         .default(DEFAULT_PAKE_OPTIONS.userAgent)
         .hideHelp())
-        .addOption(new Option('--targets <string>', 'Build target format for your system').default(DEFAULT_PAKE_OPTIONS.targets))
-        .addOption(new Option('--app-version <string>', 'App version, the same as package.json version')
+        .addOption(new Option('--targets <string>', 'Output target for the current platform').default(DEFAULT_PAKE_OPTIONS.targets))
+        .addOption(new Option('--app-version <string>', 'App version written to Tauri metadata')
         .default(DEFAULT_PAKE_OPTIONS.appVersion)
         .hideHelp())
-        .addOption(new Option('--always-on-top', 'Always on the top level')
+        .addOption(new Option('--always-on-top', 'Keep the window above other windows')
         .default(DEFAULT_PAKE_OPTIONS.alwaysOnTop)
         .hideHelp())
         .addOption(new Option('--maximize', 'Start window maximized')
@@ -2895,19 +2895,16 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         .addOption(new Option('--dark-mode', 'Force app to use dark mode (supports macOS, Windows, and Linux)')
         .default(DEFAULT_PAKE_OPTIONS.darkMode)
         .hideHelp())
-        .addOption(new Option('--disabled-web-shortcuts', 'Disabled webPage shortcuts')
+        .addOption(new Option('--disabled-web-shortcuts', 'Disable common web keyboard shortcuts')
         .default(DEFAULT_PAKE_OPTIONS.disabledWebShortcuts)
         .hideHelp())
-        .addOption(new Option('--activation-shortcut <string>', 'Shortcut key to active App')
+        .addOption(new Option('--activation-shortcut <string>', 'Global shortcut that restores the app')
         .default(DEFAULT_PAKE_OPTIONS.activationShortcut)
         .hideHelp())
-        .addOption(new Option('--tray <mode>', 'System tray policy: always, minimized, or never')
+        .addOption(new Option('--tray <mode>', 'Tray visibility: always, minimized, or never')
         .choices(['always', 'minimized', 'never'])
         .default(DEFAULT_PAKE_OPTIONS.tray))
-        .addOption(new Option('--show-system-tray', 'Show system tray in app')
-        .default(DEFAULT_PAKE_OPTIONS.showSystemTray)
-        .hideHelp())
-        .addOption(new Option('--system-tray-icon <string>', 'Custom system tray icon')
+        .addOption(new Option('--system-tray-icon <string>', 'macOS-only tray icon override; other platforms ignore it')
         .default(DEFAULT_PAKE_OPTIONS.systemTrayIcon)
         .hideHelp())
         .addOption(new Option('--hide-on-close [boolean]', 'Hide window on close instead of exiting (default: true for macOS, false for others)')
@@ -2922,38 +2919,38 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         throw new Error('--hide-on-close must be true or false');
     })
         .hideHelp())
-        .addOption(new Option('--title <string>', 'Window title').hideHelp())
-        .addOption(new Option('--incognito', 'Launch app in incognito/private mode')
+        .addOption(new Option('--title <string>', 'Window title override').hideHelp())
+        .addOption(new Option('--incognito', 'Use a private webview session')
         .default(DEFAULT_PAKE_OPTIONS.incognito)
         .hideHelp())
-        .addOption(new Option('--wasm', 'Enable WebAssembly support (Flutter Web, etc.)')
+        .addOption(new Option('--wasm', 'Enable WebAssembly support')
         .default(DEFAULT_PAKE_OPTIONS.wasm)
         .hideHelp())
-        .addOption(new Option('--enable-drag-drop', 'Enable drag and drop functionality')
+        .addOption(new Option('--enable-drag-drop', 'Enable webview drag and drop')
         .default(DEFAULT_PAKE_OPTIONS.enableDragDrop)
         .hideHelp())
-        .addOption(new Option('--keep-binary', 'Keep raw binary file alongside installer')
+        .addOption(new Option('--keep-binary', 'Copy the raw executable next to the installer')
         .default(DEFAULT_PAKE_OPTIONS.keepBinary)
         .hideHelp())
         .addOption(new Option('--no-bundle', 'Skip installer packaging and output only the raw executable')
         .default(DEFAULT_PAKE_OPTIONS.bundle)
         .hideHelp())
-        .addOption(new Option('--multi-instance', 'Allow multiple app instances')
+        .addOption(new Option('--multi-instance', 'Allow multiple app processes')
         .default(DEFAULT_PAKE_OPTIONS.multiInstance)
         .hideHelp())
-        .addOption(new Option('--multi-window', 'Allow opening multiple windows within one app instance')
+        .addOption(new Option('--multi-window', 'Allow one app process to open multiple windows')
         .default(DEFAULT_PAKE_OPTIONS.multiWindow)
         .hideHelp())
-        .addOption(new Option('--start-to-tray', 'Start app minimized to tray')
+        .addOption(new Option('--start-to-tray', 'Start hidden in the tray when tray is enabled')
         .default(DEFAULT_PAKE_OPTIONS.startToTray)
         .hideHelp())
-        .addOption(new Option('--force-internal-navigation', 'Keep every link inside the Pake window instead of opening external handlers').default(DEFAULT_PAKE_OPTIONS.forceInternalNavigation))
-        .addOption(new Option('--internal-url-regex <string>', 'Regex pattern to match URLs that should be considered internal').default(DEFAULT_PAKE_OPTIONS.internalUrlRegex))
-        .addOption(new Option('--safe-domain <domains>', 'Comma-separated domains kept inside the app (e.g. SSO/workspace callbacks)').default(DEFAULT_PAKE_OPTIONS.safeDomain))
+        .addOption(new Option('--force-internal-navigation', 'Keep all navigation inside the Pake window').default(DEFAULT_PAKE_OPTIONS.forceInternalNavigation))
+        .addOption(new Option('--internal-url-regex <string>', 'Regex for URLs that should stay inside the app').default(DEFAULT_PAKE_OPTIONS.internalUrlRegex))
+        .addOption(new Option('--safe-domain <domains>', 'Comma-separated domains kept inside the app').default(DEFAULT_PAKE_OPTIONS.safeDomain))
         .addOption(new Option('--enable-find', 'Enable in-page Find UI with Cmd/Ctrl+F/G shortcuts')
         .default(DEFAULT_PAKE_OPTIONS.enableFind)
         .hideHelp())
-        .addOption(new Option('--installer-language <string>', 'Installer language')
+        .addOption(new Option('--installer-language <string>', 'Windows installer language')
         .default(DEFAULT_PAKE_OPTIONS.installerLanguage)
         .hideHelp())
         .addOption(new Option('--zoom <number>', 'Initial page zoom level (50-200)')
@@ -2977,7 +2974,7 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         .addOption(new Option('--ignore-certificate-errors', 'Ignore certificate errors (for self-signed certificates)')
         .default(DEFAULT_PAKE_OPTIONS.ignoreCertificateErrors)
         .hideHelp())
-        .addOption(new Option('--iterative-build', 'Turn on rapid build mode (app only, no dmg/deb/nsis), good for debugging')
+        .addOption(new Option('--iterative-build', 'Build app bundle only for faster local iteration')
         .default(DEFAULT_PAKE_OPTIONS.iterativeBuild)
         .hideHelp())
         .addOption(new Option('--new-window', 'Allow sites to open new windows (for auth flows, tabs, branches)').default(DEFAULT_PAKE_OPTIONS.newWindow))

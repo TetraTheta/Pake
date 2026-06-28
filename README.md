@@ -66,13 +66,13 @@ First-time packaging can be slow because Tauri prerequisites and build caches ar
 
 When `--icon` is not provided, Pake fetches the website icon and converts it to the platform format below.
 
-| Platform         | Output icon      | Sizes                           |
-| ---------------- | ---------------- | ------------------------------- |
-| Windows          | `.ico`           | 16, 24, 32, 48, 64, 128, 256    |
-| macOS            | `.icns`          | 16, 32, 64, 128, 256, 512, 1024 |
-| macOS tray       | `.png`           | 512                             |
-| Linux            | `.png`           | 512                             |
-| Custom tray icon | `.ico` or `.png` | 32 to 256 recommended           |
+| Platform            | Output icon      | Sizes                           |
+| ------------------- | ---------------- | ------------------------------- |
+| Windows             | `.ico`           | 16, 24, 32, 48, 64, 128, 256    |
+| macOS               | `.icns`          | 16, 32, 64, 128, 256, 512, 1024 |
+| macOS tray          | `.png`           | 512                             |
+| macOS tray override | `.png` or `.ico` | 32 to 512 recommended           |
+| Linux               | `.png`           | 512                             |
 
 ## Development
 

@@ -327,31 +327,38 @@ async function mergeIcons(
       await fsExtra.pathExists(absoluteMacTrayIconPath),
     );
   }
+
   if (options.systemTrayIcon.length > 0) {
-    try {
-      const resolvedTrayIconPath = path.resolve(options.systemTrayIcon);
-      if (!(await fsExtra.pathExists(resolvedTrayIconPath))) {
-        throw new Error('file does not exist');
-      }
-      const iconExt = path.extname(resolvedTrayIconPath).toLowerCase();
-      if (iconExt === '.png' || iconExt === '.ico') {
-        const trayIcoPath = path.join(
-          npmDirectory,
-          `src-tauri/png/${safeAppName}${iconExt}`,
-        );
-        trayIconPath = `png/${safeAppName}${iconExt}`;
-        await fsExtra.copy(resolvedTrayIconPath, trayIcoPath);
-      } else {
-        logger.warn(
-          `✼ System tray icon must be .ico or .png, but you provided ${iconExt}.`,
-        );
-        logger.warn(`✼ No system tray icon will be configured.`);
-      }
-    } catch (err) {
+    if (platform !== 'darwin') {
       logger.warn(
-        `✼ Failed to apply system tray icon "${options.systemTrayIcon}": ${err instanceof Error ? err.message : String(err)}`,
+        '✼ --system-tray-icon is only supported on macOS and will be ignored on this platform.',
       );
-      logger.warn(`✼ System tray icon will remain unchanged.`);
+    } else {
+      try {
+        const resolvedTrayIconPath = path.resolve(options.systemTrayIcon);
+        if (!(await fsExtra.pathExists(resolvedTrayIconPath))) {
+          throw new Error('file does not exist');
+        }
+        const iconExt = path.extname(resolvedTrayIconPath).toLowerCase();
+        if (iconExt === '.png' || iconExt === '.ico') {
+          const trayIconFile = `png/${safeAppName}${iconExt}`;
+          trayIconPath = trayIconFile;
+          await fsExtra.copy(
+            resolvedTrayIconPath,
+            path.join(npmDirectory, 'src-tauri', trayIconFile),
+          );
+        } else {
+          logger.warn(
+            `✼ macOS tray icon must be .png or .ico, but you provided ${iconExt}.`,
+          );
+          logger.warn('✼ The generated app icon will be used for the tray.');
+        }
+      } catch (err) {
+        logger.warn(
+          `✼ Failed to apply macOS tray icon "${options.systemTrayIcon}": ${err instanceof Error ? err.message : String(err)}`,
+        );
+        logger.warn('✼ The generated app icon will be used for the tray.');
+      }
     }
   }
 
