@@ -1,11 +1,43 @@
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import sharp from 'sharp';
 
-import { downloadIcon } from '@/options/icon';
+import { downloadIcon, handleIcon } from '@/options/icon';
+import { npmDirectory } from '@/utils/dir';
 import { getIconSourcePriority } from '@/utils/icon-source';
 
 const downloadedIconPaths: string[] = [];
+const generatedIconPaths: string[] = [];
+const fallbackFixturePaths: string[] = [];
+
+async function ensureFallbackFixtures(): Promise<void> {
+  const fallbackDir = path.join(npmDirectory, 'src-tauri', 'fallback-icon');
+  const requiredSizes = [16, 24, 32, 48, 64, 128, 256, 512, 1024];
+
+  await fs.promises.mkdir(fallbackDir, { recursive: true });
+  await Promise.all(
+    requiredSizes.map(async (size) => {
+      const iconPath = path.join(fallbackDir, `icon-${size}.png`);
+      if (fs.existsSync(iconPath)) {
+        return;
+      }
+
+      await sharp({
+        create: {
+          width: size,
+          height: size,
+          channels: 4,
+          background: '#111827',
+        },
+      })
+        .png()
+        .toFile(iconPath);
+      fallbackFixturePaths.push(iconPath);
+    }),
+  );
+}
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -20,6 +52,26 @@ afterEach(() => {
     const tempDir = path.dirname(iconPath);
     if (fs.existsSync(tempDir)) {
       fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+  }
+
+  while (generatedIconPaths.length > 0) {
+    const iconPath = generatedIconPaths.pop();
+    if (!iconPath || !fs.existsSync(iconPath)) {
+      continue;
+    }
+
+    if (path.resolve(iconPath).startsWith(os.tmpdir())) {
+      fs.rmSync(path.dirname(iconPath), { recursive: true, force: true });
+    } else {
+      fs.unlinkSync(iconPath);
+    }
+  }
+
+  while (fallbackFixturePaths.length > 0) {
+    const iconPath = fallbackFixturePaths.pop();
+    if (iconPath && fs.existsSync(iconPath)) {
+      fs.unlinkSync(iconPath);
     }
   }
 });
@@ -115,5 +167,29 @@ describe('downloadIcon', () => {
         1000,
       ),
     ).resolves.toBeNull();
+  });
+
+  it('generates a fallback icon when remote lookup fails', async () => {
+    await ensureFallbackFixtures();
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')));
+
+    const iconPath = await handleIcon(
+      { name: 'FallbackApp' } as any,
+      'https://fallback.invalid',
+    );
+
+    expect(iconPath).toBeTruthy();
+    expect(fs.existsSync(iconPath)).toBe(true);
+    generatedIconPaths.push(iconPath);
+
+    const macTrayIconPath = path.join(
+      process.cwd(),
+      'src-tauri',
+      'png',
+      'fallbackapp_512.png',
+    );
+    if (fs.existsSync(macTrayIconPath)) {
+      generatedIconPaths.push(macTrayIconPath);
+    }
   });
 });

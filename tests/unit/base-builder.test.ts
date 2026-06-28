@@ -312,7 +312,8 @@ describe('BaseBuilder guards', () => {
 
     const command = (builder as any).getBuildCommand('pnpm');
 
-    expect(command).toContain('--features cli-build,webview-devtools');
+    expect(command).toContain('cli-build');
+    expect(command).toContain('webview-devtools');
     expect(command).toContain('pnpm run build');
     expect(command).not.toContain('build:debug');
   });

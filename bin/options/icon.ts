@@ -52,6 +52,7 @@ const PLATFORM_CONFIG: Record<'win' | 'linux' | 'macos', PlatformIconConfig> = {
   linux: { format: '.png', size: 512 },
   macos: { format: '.icns', sizes: [16, 32, 64, 128, 256, 512, 1024] },
 };
+const FALLBACK_ICON_DIR = path.join(npmDirectory, 'src-tauri', 'fallback-icon');
 
 const API_KEYS = {
   logoDev: ['pk_JLLMUKGZRpaG5YclhXaTkg', 'pk_Ph745P8mQSeYFfW2Wk039A'],
@@ -333,6 +334,60 @@ async function processIcon(
   return iconPath;
 }
 
+async function getFallbackPng(requiredSize: number): Promise<string | null> {
+  if (!(await fsExtra.pathExists(FALLBACK_ICON_DIR))) {
+    return null;
+  }
+
+  const icons = (await fsExtra.readdir(FALLBACK_ICON_DIR))
+    .map((fileName) => {
+      const match = /^icon-(\d+)\.png$/i.exec(fileName);
+      return match
+        ? {
+            path: path.join(FALLBACK_ICON_DIR, fileName),
+            size: Number(match[1]),
+          }
+        : null;
+    })
+    .filter((icon): icon is { path: string; size: number } => icon !== null)
+    .sort((a, b) => a.size - b.size);
+
+  return (
+    icons.find((icon) => icon.size === requiredSize)?.path ||
+    icons.find((icon) => icon.size > requiredSize)?.path ||
+    null
+  );
+}
+
+async function createFallbackIcon(appName: string): Promise<string | null> {
+  if (IS_WIN) {
+    const frames = await Promise.all(
+      WIN_STANDARD_ICO_SIZES.map(async (size) => {
+        const sourcePath = await getFallbackPng(size);
+        if (!sourcePath) {
+          throw new Error(`fallback icon-${size}.png or a larger PNG is missing`);
+        }
+
+        const png = await sharp(sourcePath)
+          .resize(size, size, {
+            fit: 'contain',
+            background: ICON_CONFIG.transparentBackground,
+          })
+          .ensureAlpha()
+          .png()
+          .toBuffer();
+        return { size, png };
+      }),
+    );
+    const outputPath = generateIconPath(appName);
+    await fsExtra.outputFile(outputPath, buildIcoFromPngBuffers(frames));
+    return outputPath;
+  }
+
+  const sourcePath = await getFallbackPng(IS_LINUX ? 512 : 1024);
+  return sourcePath ? await processIcon(sourcePath, appName) : null;
+}
+
 /**
  * Main icon handling function with simplified logic flow
  */
@@ -369,6 +424,18 @@ export async function handleIcon(
   if (url && options.name) {
     const faviconPath = await tryGetFavicon(url, options.name);
     if (faviconPath) return faviconPath;
+  }
+
+  try {
+    const fallbackIcon = await createFallbackIcon(options.name || 'pake-app');
+    if (fallbackIcon) {
+      logger.warn('✼ No icon found; using fallback icon.');
+      return fallbackIcon;
+    }
+  } catch (error) {
+    logger.warn(
+      `✼ Failed to build fallback icon: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 
   logger.warn('✼ No icon found; no app icon will be configured.');

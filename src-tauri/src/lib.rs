@@ -2,6 +2,7 @@
 mod app;
 mod util;
 
+#[cfg(feature = "cli-build")]
 use tauri::Manager;
 #[cfg(not(target_os = "windows"))]
 use tauri_plugin_window_state::Builder as WindowStatePlugin;
@@ -20,11 +21,12 @@ const WEBKIT_DISABLE_COMPOSITING_MODE: &str = "WEBKIT_DISABLE_COMPOSITING_MODE";
 #[cfg(target_os = "linux")]
 const GDK_BACKEND: &str = "GDK_BACKEND";
 
+use app::config::TrayIconMode;
+#[cfg(feature = "cli-build")]
 use app::{
-    config::TrayIconMode,
     invoke::{
         clear_cache_restart, clear_dock_badge, download_file, hide_main_window,
-        increment_dock_badge, send_notification, set_dock_badge, set_dock_badge_label,
+        increment_dock_badge, send_notification, set_dock_badge, set_dock_badge_label, set_zoom,
         update_theme_mode,
     },
     setup::{restore_window, set_global_shortcut, set_system_tray},
@@ -142,6 +144,10 @@ fn apply_linux_webkit_runtime_flags() {
     }
 }
 
+#[cfg(not(feature = "cli-build"))]
+pub fn run_app() {}
+
+#[cfg(feature = "cli-build")]
 pub fn run_app() {
     #[cfg(target_os = "linux")]
     {
