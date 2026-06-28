@@ -18,7 +18,11 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
     .usage(`[url] [options]`)
     .helpOption('-h, --help', 'Show help')
     .showHelpAfterError()
-    .argument('[url]', 'Web URL or local HTML file to package', validateUrlInput)
+    .argument(
+      '[url]',
+      'Web URL or local HTML file to package',
+      validateUrlInput,
+    )
     .option('--name <string>', 'App name shown by the OS')
     .addOption(
       new Option(
@@ -44,8 +48,16 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
       'Copy local HTML assets into the app bundle',
       DEFAULT.useLocalFile,
     )
-    .option('--fullscreen', 'Start the window in fullscreen', DEFAULT.fullscreen)
-    .option('--hide-title-bar', 'Hide the macOS title bar', DEFAULT.hideTitleBar)
+    .option(
+      '--fullscreen',
+      'Start the window in fullscreen',
+      DEFAULT.fullscreen,
+    )
+    .option(
+      '--hide-title-bar',
+      'Hide the macOS title bar',
+      DEFAULT.hideTitleBar,
+    )
     .option('--multi-arch', 'Build a universal macOS binary', DEFAULT.multiArch)
     .option(
       '--inject <files>',
@@ -119,12 +131,18 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         .hideHelp(),
     )
     .addOption(
-      new Option('--disabled-web-shortcuts', 'Disable common web keyboard shortcuts')
+      new Option(
+        '--disabled-web-shortcuts',
+        'Disable common web keyboard shortcuts',
+      )
         .default(DEFAULT.disabledWebShortcuts)
         .hideHelp(),
     )
     .addOption(
-      new Option('--activation-shortcut <string>', 'Global shortcut that restores the app')
+      new Option(
+        '--activation-shortcut <string>',
+        'Global shortcut that restores the app',
+      )
         .default(DEFAULT.activationShortcut)
         .hideHelp(),
     )
@@ -158,7 +176,9 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         })
         .hideHelp(),
     )
-    .addOption(new Option('--title <string>', 'Window title override').hideHelp())
+    .addOption(
+      new Option('--title <string>', 'Window title override').hideHelp(),
+    )
     .addOption(
       new Option('--incognito', 'Use a private webview session')
         .default(DEFAULT.incognito)
@@ -175,7 +195,10 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         .hideHelp(),
     )
     .addOption(
-      new Option('--keep-binary', 'Copy the raw executable next to the installer')
+      new Option(
+        '--keep-binary',
+        'Copy the raw executable next to the installer',
+      )
         .default(DEFAULT.keepBinary)
         .hideHelp(),
     )
@@ -201,7 +224,10 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         .hideHelp(),
     )
     .addOption(
-      new Option('--start-to-tray', 'Start hidden in the tray when tray is enabled')
+      new Option(
+        '--start-to-tray',
+        'Start hidden in the tray when tray is enabled',
+      )
         .default(DEFAULT.startToTray)
         .hideHelp(),
     )

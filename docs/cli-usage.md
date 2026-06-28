@@ -76,17 +76,17 @@ The URL is the link to the web page you want to package or the path to a local H
 
 Various options are available for customization. `pake --help` shows every supported CLI option. This page is the complete reference.
 
-| Option             | Description                                           | Example                                        |
-| ------------------ | ----------------------------------------------------- | ---------------------------------------------- |
-| `--name`           | App name shown by the OS                              | `--name "Weekly"`                              |
-| `--icon`           | Custom app icon file or URL; otherwise auto-detected  | `--icon https://cdn.tw93.fun/pake/weekly.icns` |
-| `--width`          | Initial window width (default: 1200px)                | `--width 1400`                                 |
-| `--height`         | Initial window height (default: 780px)                | `--height 900`                                 |
-| `--hide-title-bar` | Hide the macOS title bar                              | `--hide-title-bar`                             |
-| `--tray`           | Tray visibility: `always`, `minimized`, or `never`    | `--tray always`                                |
-| `--debug`          | Build a debug app with verbose output                 | `--debug`                                      |
-| `--help`           | Show help                                             | `--help`                                       |
-| `--version`        | Show CLI version                                      | `--version`                                    |
+| Option             | Description                                          | Example                                        |
+| ------------------ | ---------------------------------------------------- | ---------------------------------------------- |
+| `--name`           | App name shown by the OS                             | `--name "Weekly"`                              |
+| `--icon`           | Custom app icon file or URL; otherwise auto-detected | `--icon https://cdn.tw93.fun/pake/weekly.icns` |
+| `--width`          | Initial window width (default: 1200px)               | `--width 1400`                                 |
+| `--height`         | Initial window height (default: 780px)               | `--height 900`                                 |
+| `--hide-title-bar` | Hide the macOS title bar                             | `--hide-title-bar`                             |
+| `--tray`           | Tray visibility: `always`, `minimized`, or `never`   | `--tray always`                                |
+| `--debug`          | Build a debug app with verbose output                | `--debug`                                      |
+| `--help`           | Show help                                            | `--help`                                       |
+| `--version`        | Show CLI version                                     | `--version`                                    |
 
 For complete options, see detailed sections below.
 

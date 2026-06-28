@@ -365,7 +365,9 @@ async function createFallbackIcon(appName: string): Promise<string | null> {
       WIN_STANDARD_ICO_SIZES.map(async (size) => {
         const sourcePath = await getFallbackPng(size);
         if (!sourcePath) {
-          throw new Error(`fallback icon-${size}.png or a larger PNG is missing`);
+          throw new Error(
+            `fallback icon-${size}.png or a larger PNG is missing`,
+          );
         }
 
         const png = await sharp(sourcePath)
