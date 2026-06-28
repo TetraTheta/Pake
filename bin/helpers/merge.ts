@@ -312,7 +312,7 @@ async function mergeIcons(
   }
 
   // Empty means "use Tauri's embedded default window icon" at runtime.
-  // This keeps portable Windows builds independent from bundled resource files.
+  // This keeps raw Windows executables independent from bundled resource files.
   let trayIconPath = getDefaultTrayIconPath(platform, safeAppName);
   if (platform === 'darwin') {
     const macTrayIconPath = `png/${safeAppName}_512.png`;

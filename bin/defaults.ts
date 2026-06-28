@@ -43,7 +43,6 @@ export const DEFAULT_PAKE_OPTIONS: PakeCliOptions = {
   enableDragDrop: false,
   bundle: true,
   keepBinary: false,
-  portable: false,
   multiInstance: false,
   multiWindow: false,
   startToTray: false,

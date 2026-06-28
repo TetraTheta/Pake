@@ -728,7 +728,7 @@ async function mergeIcons(options, name, tauriConf, platform, safeAppName) {
         await fsExtra.copy(path.join(npmDirectory, 'src-tauri', tauriConf.bundle.icon[0]), path.join(npmDirectory, 'src-tauri', 'icons', 'icon.ico'));
     }
     // Empty means "use Tauri's embedded default window icon" at runtime.
-    // This keeps portable Windows builds independent from bundled resource files.
+    // This keeps raw Windows executables independent from bundled resource files.
     let trayIconPath = getDefaultTrayIconPath(platform, safeAppName);
     if (platform === 'darwin') {
         const macTrayIconPath = `png/${safeAppName}_512.png`;
@@ -1119,9 +1119,6 @@ class BaseBuilder {
     }
     async buildAndCopy(url, target, logSuccess = true) {
         const { name = 'pake-app' } = this.options;
-        if (this.options.portable && process.platform !== 'win32') {
-            throw new Error('--portable is only supported on Windows.');
-        }
         await mergeConfig(url, this.options, tauriConfig);
         const packageManager = await detectPackageManager();
         // Build app
@@ -1258,7 +1255,7 @@ class BaseBuilder {
         if (features.length > 0) {
             fullCommand += ` --features ${features.join(',')}`;
         }
-        if (this.options.portable) {
+        if (this.options.bundle === false) {
             fullCommand += ' --no-bundle';
         }
         return fullCommand;
@@ -1739,11 +1736,6 @@ post_remove() {
             ? (this.getTauriTarget(this.buildArch, 'linux') ?? undefined)
             : undefined;
         let fullCommand = this.buildBaseCommand(packageManager, configPath, buildTarget);
-        // --no-bundle: build the executable only, skipping .deb/.rpm/.appimage
-        // packaging entirely (e.g. RPM-based distros where the bundler aborts).
-        if (this.options.bundle === false) {
-            return `${fullCommand} --no-bundle`;
-        }
         if (this.currentBuildType) {
             fullCommand += ` --bundles ${this.currentBuildType}`;
         }
@@ -2698,11 +2690,6 @@ async function handleOptions(options, url) {
     if (!options.internalUrlRegex && options.safeDomain) {
         appOptions.internalUrlRegex = safeDomainsToRegex(options.safeDomain);
     }
-    // --no-bundle is Linux-only; keep normal packaging on other platforms.
-    if (appOptions.bundle === false && platform !== 'linux') {
-        logger.warn('✼ --no-bundle is only supported on Linux; ignoring it.');
-        appOptions.bundle = true;
-    }
     const iconPath = await handleIcon(appOptions, url);
     appOptions.icon = iconPath || '';
     return appOptions;
@@ -2749,7 +2736,6 @@ const DEFAULT_PAKE_OPTIONS = {
     enableDragDrop: false,
     bundle: true,
     keepBinary: false,
-    portable: false,
     multiInstance: false,
     multiWindow: false,
     startToTray: false,
@@ -2894,7 +2880,7 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         .addOption(new Option('--keep-binary', 'Keep raw binary file alongside installer')
         .default(DEFAULT_PAKE_OPTIONS.keepBinary)
         .hideHelp())
-        .addOption(new Option('--no-bundle', 'Skip packaging, output only the raw executable (Linux; for RPM distros where the bundler aborts)')
+        .addOption(new Option('--no-bundle', 'Skip installer packaging and output only the raw executable')
         .default(DEFAULT_PAKE_OPTIONS.bundle)
         .hideHelp())
         .addOption(new Option('--multi-instance', 'Allow multiple app instances')

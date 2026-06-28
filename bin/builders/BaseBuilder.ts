@@ -158,9 +158,6 @@ export default abstract class BaseBuilder {
 
   async buildAndCopy(url: string, target: string, logSuccess = true) {
     const { name = 'pake-app' } = this.options;
-    if (this.options.portable && process.platform !== 'win32') {
-      throw new Error('--portable is only supported on Windows.');
-    }
 
     await mergeConfig(url, this.options, tauriConfig);
 
@@ -375,7 +372,7 @@ export default abstract class BaseBuilder {
       fullCommand += ` --features ${features.join(',')}`;
     }
 
-    if (this.options.portable) {
+    if (this.options.bundle === false) {
       fullCommand += ' --no-bundle';
     }
 

@@ -90,11 +90,11 @@ describe('CLI options', () => {
     expect(option?.hidden).toBe(true);
   });
 
-  it('registers hidden --portable option', () => {
-    const option = program.options.find((item) => item.long === '--portable');
+  it('registers hidden --no-bundle option', () => {
+    const option = program.options.find((item) => item.long === '--no-bundle');
 
     expect(option).toBeDefined();
-    expect(option?.defaultValue).toBe(false);
+    expect(option?.defaultValue).toBe(true);
     expect(option?.hidden).toBe(true);
   });
 

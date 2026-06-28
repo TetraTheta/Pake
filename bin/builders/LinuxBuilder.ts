@@ -275,12 +275,6 @@ post_remove() {
       buildTarget,
     );
 
-    // --no-bundle: build the executable only, skipping .deb/.rpm/.appimage
-    // packaging entirely (e.g. RPM-based distros where the bundler aborts).
-    if (this.options.bundle === false) {
-      return `${fullCommand} --no-bundle`;
-    }
-
     if (this.currentBuildType) {
       fullCommand += ` --bundles ${this.currentBuildType}`;
     }

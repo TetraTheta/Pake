@@ -184,7 +184,7 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
     .addOption(
       new Option(
         '--no-bundle',
-        'Skip packaging, output only the raw executable (Linux; for RPM distros where the bundler aborts)',
+        'Skip installer packaging and output only the raw executable',
       )
         .default(DEFAULT.bundle)
         .hideHelp(),

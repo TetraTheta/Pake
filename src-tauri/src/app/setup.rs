@@ -22,6 +22,23 @@ pub fn restore_window(window: &WebviewWindow) -> tauri::Result<()> {
     Ok(())
 }
 
+#[cfg(target_os = "windows")]
+fn save_quit_window_state(app: &AppHandle, package_name: &str, _init_fullscreen: bool) {
+    if let Some(window) = app.get_webview_window("pake") {
+        let _ = save_windows_window_state(&window, package_name);
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn save_quit_window_state(app: &AppHandle, _package_name: &str, init_fullscreen: bool) {
+    let flags = if init_fullscreen {
+        StateFlags::all()
+    } else {
+        StateFlags::all() & !StateFlags::FULLSCREEN
+    };
+    let _ = app.save_window_state(flags);
+}
+
 pub fn set_system_tray(
     app: &AppHandle,
     show_system_tray: bool,
@@ -81,12 +98,7 @@ pub fn set_system_tray(
                 }
             }
             "quit" => {
-                let flags = if _init_fullscreen {
-                    StateFlags::all()
-                } else {
-                    StateFlags::all() & !StateFlags::FULLSCREEN
-                };
-                let _ = app.save_window_state(flags);
+                save_quit_window_state(app, &package_name, _init_fullscreen);
                 app.exit(0);
             }
             _ => (),

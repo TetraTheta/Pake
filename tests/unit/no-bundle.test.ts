@@ -9,6 +9,7 @@ vi.mock('@/utils/dir', () => ({
 }));
 
 import LinuxBuilder from '@/builders/LinuxBuilder';
+import WinBuilder from '@/builders/WinBuilder';
 import { PakeAppOptions } from '@/types';
 
 const makeBuilder = (bundle: boolean) =>
@@ -24,5 +25,16 @@ describe('LinuxBuilder --no-bundle', () => {
   it('does not append --no-bundle when bundle is true (default)', () => {
     const cmd = (makeBuilder(true) as any).getBuildCommand('pnpm');
     expect(cmd).not.toContain('--no-bundle');
+  });
+
+  it('uses the same raw-executable build path on Windows', () => {
+    const builder = new WinBuilder({
+      name: 'demo',
+      targets: 'x64',
+      bundle: false,
+    } as PakeAppOptions);
+
+    const cmd = (builder as any).getBuildCommand('pnpm');
+    expect(cmd).toContain('--no-bundle');
   });
 });

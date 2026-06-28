@@ -344,13 +344,13 @@ Specify the build target architecture or format:
 
 #### [no-bundle]
 
-Skip packaging and output only the compiled executable. Linux only. Useful on RPM-based distros (Fedora, RHEL, Oracle Linux, etc.) where the native bundler can abort during the packaging stage, so you still get a runnable binary.
+Skip installer packaging and output only the compiled executable. Useful when you need a raw executable or when a Linux distro's native bundler aborts during packaging.
 
 ```shell
 pake https://github.com --name GitHub --no-bundle
 ```
 
-The raw executable is copied to the current directory as `<name>-binary`. On platforms other than Linux this flag is ignored.
+The raw executable is copied to the current directory as `<name>-binary` on Unix and `<name>.exe` on Windows.
 
 #### [user-agent]
 
@@ -482,24 +482,6 @@ pake https://github.com --name GitHub --keep-binary
 ```
 
 **Output**: Creates both installer and standalone executable (`AppName-binary` on Unix, `AppName.exe` on Windows).
-
-#### [portable]
-
-Build a Windows `.exe` without an installer. Default is `false`.
-
-```shell
---portable
-
-# Example: Build only GitHub.exe on Windows
-pake https://github.com --name GitHub --portable
-```
-
-On Windows, app data and WebView data are stored under `%AppData%\<AppName>` by default:
-
-- App data: `%AppData%\<AppName>\data`
-- WebView data: `%AppData%\<AppName>\webview`
-
-Set `PAKE_APP_DIR` to override that root, for example `PAKE_APP_DIR=D:\Portable\GitHub`. Non-Windows systems should use the normal bundle formats (`.app`, AppImage, DEB, RPM, ZST); Pake does not provide a cross-platform single-file app mode.
 
 #### [iterative-build]
 
