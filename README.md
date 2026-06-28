@@ -1,81 +1,70 @@
-<p align="center">
-    <img src=https://gw.alipayobjects.com/zos/k/fa/logo-modified.png width=138/>
-</p>
-<h1 align="center">Pake</h1>
-<p align="center"><strong>Turn any webpage into a desktop app with one command, supports macOS, Windows, and Linux</strong></p>
-<div align="center">
-    <a href="https://twitter.com/HiTw93" target="_blank">
-    <img alt="twitter" src="https://img.shields.io/badge/follow-Tw93-red?style=flat-square&logo=Twitter"></a>
-    <a href="https://t.me/+9f9gf4ZrFSQ2OWVl" target="_blank">
-    <img alt="telegram" src="https://img.shields.io/badge/chat-telegram-blueviolet?style=flat-square&logo=Telegram"></a>
-    <a href="https://github.com/tw93/Pake/releases" target="_blank">
-    <img alt="GitHub downloads" src="https://img.shields.io/github/downloads/tw93/Pake/total.svg?style=flat-square"></a>
-    <a href="https://github.com/tw93/Pake/commits" target="_blank">
-    <img alt="GitHub commit" src="https://img.shields.io/github/commit-activity/m/tw93/Pake?style=flat-square"></a>
-    <a href="https://github.com/tw93/Pake/issues?q=is%3Aissue+is%3Aclosed" target="_blank">
-    <img alt="GitHub closed issues" src="https://img.shields.io/github/issues-closed/tw93/Pake.svg?style=flat-square"></a>
-</div>
+# Pake
 
-## Features
+This is a customized local fork of Pake for packaging webpages as lightweight desktop apps.
 
-- 🎐 **Lightweight**: Installer is nearly 20 times smaller than Electron packages, typically under 10M on disk
-- 🚀 **Fast**: Built with Rust Tauri, much faster than traditional JS frameworks with lower memory usage
-- ⚡ **Easy to use**: One-command packaging via CLI or online building, no complex configuration needed
-- 📦 **Feature-rich**: Supports shortcuts, immersive windows, drag & drop, style customization, ad removal
+This fork is not published to npm or any other registry. `pnpm install -g pake-cli`, `npm install -g pake-cli`, `npx pake`, and `npx pake-cli` may fetch the upstream package, so build and run this checkout locally to use the customized code.
+
+For the full upstream project introduction, screenshots, and community information, see the [upstream README](https://github.com/tw93/Pake#readme).
 
 ## Getting Started
 
-- **Beginners**: Use [Online Building](docs/github-actions-usage.md) with no environment setup required
-- **Developers**: Install [CLI Tool](docs/cli-usage.md) for one-command packaging of any website with customizable icons, window settings, and more
-- **Advanced Users**: Clone the project locally for [Custom Development](#development), or check [Advanced Usage](docs/advanced-usage.md) for style customization and feature enhancement
-- **Troubleshooting**: Check [FAQ](docs/faq.md) for common issues and solutions
+- **CLI packaging**: see [CLI Usage](docs/cli-usage.md) for all command options.
+- **GitHub Actions build**: see [GitHub Actions Online Building](docs/github-actions-usage.md).
+- **Advanced customization**: see [Advanced Usage](docs/advanced-usage.md).
+- **Troubleshooting**: see [FAQ](docs/faq.md).
 
-<details>
-<summary>🏂 Click here to expand the shortcuts reference!</summary>
+## Local CLI Setup
 
-<br/>
+Run these commands from the repository root in PowerShell.
 
-| Mac                                                       | Windows/Linux                                       | Function                            |
-| --------------------------------------------------------- | --------------------------------------------------- | ----------------------------------- |
-| <kbd>⌘</kbd> + <kbd>[</kbd>                               | <kbd>Ctrl</kbd> + <kbd>←</kbd>                      | Return to the previous page         |
-| <kbd>⌘</kbd> + <kbd>]</kbd>                               | <kbd>Ctrl</kbd> + <kbd>→</kbd>                      | Go to the next page                 |
-| <kbd>⌘</kbd> + <kbd>↑</kbd>                               | <kbd>Ctrl</kbd> + <kbd>↑</kbd>                      | Auto scroll to top of page          |
-| <kbd>⌘</kbd> + <kbd>↓</kbd>                               | <kbd>Ctrl</kbd> + <kbd>↓</kbd>                      | Auto scroll to bottom of page       |
-| <kbd>⌘</kbd> + <kbd>r</kbd>                               | <kbd>Ctrl</kbd> + <kbd>r</kbd>                      | Refresh Page                        |
-| <kbd>⌘</kbd> + <kbd>w</kbd>                               | <kbd>Ctrl</kbd> + <kbd>w</kbd>                      | Hide window, not quit               |
-| <kbd>⌘</kbd> + <kbd>-</kbd>                               | <kbd>Ctrl</kbd> + <kbd>-</kbd>                      | Zoom out the page                   |
-| <kbd>⌘</kbd> + <kbd>=</kbd>                               | <kbd>Ctrl</kbd> + <kbd>=</kbd>                      | Zoom in the Page                    |
-| <kbd>⌘</kbd> + <kbd>0</kbd>                               | <kbd>Ctrl</kbd> + <kbd>0</kbd>                      | Reset the page zoom                 |
-| <kbd>⌘</kbd> + <kbd>L</kbd>                               | <kbd>Ctrl</kbd> + <kbd>L</kbd>                      | Copy Current Page URL               |
-| <kbd>⌘</kbd> + <kbd>⇧</kbd> + <kbd>⌥</kbd> + <kbd>V</kbd> | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd>   | Paste and Match Style               |
-| <kbd>⌘</kbd> + <kbd>⇧</kbd> + <kbd>H</kbd>                | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>H</kbd>   | Go to Home Page                     |
-| <kbd>⌘</kbd> + <kbd>⌥</kbd> + <kbd>I</kbd>                | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>I</kbd>   | Toggle Developer Tools (Debug Only) |
-| <kbd>⌘</kbd> + <kbd>⇧</kbd> + <kbd>⌫</kbd>                | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Del</kbd> | Clear Cache & Restart               |
+```powershell
+pnpm install
+pnpm run cli:build
+pnpm link --global
+```
 
-In addition, double-click the title bar to switch to full-screen mode. For Mac users, you can also use the gesture to go to the previous or next page and drag the title bar to move the window. The new menu also offers options for navigation, zoom, and window controls.
+To use the pnpm version pinned by this project, run through `corepack`.
 
-</details>
+```powershell
+corepack pnpm@10.26.2 install
+corepack pnpm@10.26.2 run cli:build
+corepack pnpm@10.26.2 link --global
+```
 
-## Command-Line Packaging
+Verify the link:
 
-![Pake](https://raw.githubusercontent.com/tw93/static/main/pake/pake1.gif)
+```powershell
+pake --version
+Get-Command pake
+```
+
+If `Get-Command pake` points to an executable linked from this repository, the local CLI is active.
+
+You can also run the built CLI temporarily without a global link.
+
+```powershell
+node .\dist\cli.js https://example.com --name MyApp
+```
+
+After changing CLI source under `bin/`, regenerate `dist/cli.js`.
+
+```powershell
+pnpm run cli:build
+```
+
+## Usage
 
 ```bash
-# Install Pake CLI
-pnpm install -g pake-cli
-
-# Basic usage - automatically fetches website icon
 pake https://github.com --name GitHub
 
-# Advanced usage with custom options
 pake https://weekly.tw93.fun --name Weekly --icon https://cdn.tw93.fun/pake/weekly.icns --width 1200 --height 800 --hide-title-bar
 ```
 
-First-time packaging requires environment setup and may be slower, subsequent builds are fast. For complete parameter documentation, see [CLI Usage Guide](docs/cli-usage.md). Don't want to use CLI? Try [GitHub Actions Online Building](docs/github-actions-usage.md).
+First-time packaging can be slow because Tauri prerequisites and build caches are prepared. Later builds reuse local caches.
 
-### Icon Sizes
+## Icon Sizes
 
-Pake auto-fetches website icons when `--icon` is not provided, then converts them into the platform format below. For Windows `.ico` files passed directly with `--icon`, exact PNG frames are kept when present; missing sizes are generated from the largest decodable frame. By default, the tray uses the embedded app icon and appears only while the window is minimized to tray.
+When `--icon` is not provided, Pake fetches the website icon and converts it to the platform format below.
 
 | Platform         | Output icon      | Sizes                           |
 | ---------------- | ---------------- | ------------------------------- |
@@ -87,41 +76,22 @@ Pake auto-fetches website icons when `--icon` is not provided, then converts the
 
 ## Development
 
-Requires Rust `>=1.85` and Node `>=22` (recommended LTS; `>=18` also works). For detailed installation guide, see [Tauri documentation](https://v2.tauri.app/start/prerequisites/). If unfamiliar with development environment, use the CLI tool instead.
+Rust `>=1.85` and Node `>=22` are recommended. Node `>=18` may also work. See the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for platform setup.
 
 ```bash
-# Install dependencies
 pnpm i
-
-# Local development [right-click to open debug mode]
 pnpm run dev
-
-# Build application
 pnpm run build
 ```
 
-For style customization, feature enhancement, container communication and other advanced features, see [Advanced Usage Documentation](docs/advanced-usage.md).
+Useful checks:
 
-## Developers
-
-Pake's development can not be without these Hackers. They contributed a lot of capabilities for Pake. Also, welcome to follow them! ❤️
-
-<a href="https://github.com/tw93/Pake/graphs/contributors">
-  <img src="./CONTRIBUTORS.svg?v=2" alt="Contributors" width="1000" />
-</a>
-
-## Support
-
-- The most direct way to support me is getting [Mole for Mac](https://mole.fit), my paid Mac cleanup app.
-- If Pake helped you, give it a star, [share it](https://twitter.com/intent/tweet?url=https://github.com/tw93/Pake&text=Pake%20-%20Turn%20any%20webpage%20into%20a%20desktop%20app%20with%20one%20command.%20Nearly%2020x%20smaller%20than%20Electron%20packages,%20supports%20macOS%20Windows%20Linux), or open an issue or PR.
-- I have two cats, TangYuan and Coke. If you think Pake delights your life, you can feed them <a href="https://cats.tw93.fun?name=Pake" target="_blank">canned food 🥩</a>.
-
-<details>
-<summary>These lovely people already did 🐱</summary>
-<br/>
-<a href="https://cats.tw93.fun?name=Pake"><img src="https://cdn.jsdelivr.net/gh/tw93/sponsors@main/assets/sponsors.svg" width="1000" loading="lazy" /></a>
-</details>
+```bash
+pnpm run cli:build
+npx vitest run
+pnpm test -- --no-build
+```
 
 ## License
 
-Pake is open source under GPL-3.0, see [LICENSE](./LICENSE) and [Pake Output Exception](./LICENSE-EXCEPTION); apps you build with Pake are entirely yours to use and distribute. If you fork Pake into your own product, to avoid confusion please give it a different name and credit Pake as the source.
+Pake is open source under GPL-3.0. See [LICENSE](./LICENSE) and [Pake Output Exception](./LICENSE-EXCEPTION). Apps you build with Pake are yours to use and distribute.

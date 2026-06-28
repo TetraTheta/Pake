@@ -2,50 +2,56 @@
 
 Complete command-line reference and basic usage for Pake CLI.
 
-## Installation
+## Local Installation
 
-Ensure that your Node.js version is 22.0 or higher (e.g., 22.11.0). _Note: Older versions ≥18.0.0 may also work._
+This fork is not published to npm or any other registry. `pnpm install -g pake-cli`, `npm install -g pake-cli`, `npx pake`, and `npx pake-cli` may fetch the upstream package, so build and run this checkout locally to use the customized code.
 
-**Recommended (pnpm):**
+Node.js `>=22` is recommended. Node.js `>=18` may also work.
 
-```bash
-pnpm install -g pake-cli
+Run these commands from the repository root in PowerShell.
+
+```powershell
+pnpm install
+pnpm run cli:build
+pnpm link --global
 ```
 
-**Alternative (npm):**
+To use the pnpm version pinned by this project, run through `corepack`.
 
-```bash
-npm install -g pake-cli
+```powershell
+corepack pnpm@10.26.2 install
+corepack pnpm@10.26.2 run cli:build
+corepack pnpm@10.26.2 link --global
 ```
 
-**If you encounter permission issues:**
+Verify the link:
 
-```bash
-# Use npx to run without global installation
-npx pake-cli [url] [options]
+```powershell
+pake --version
+Get-Command pake
+```
 
-# Or fix npm permissions permanently
-npm config set prefix ~/.npm-global
-echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
-source ~/.bashrc
+If `Get-Command pake` points to an executable linked from this repository, the local CLI is active.
+
+To run temporarily without a global link, execute the built CLI file directly.
+
+```powershell
+node .\dist\cli.js https://example.com --name MyApp
 ```
 
 **Prerequisites:**
 
-- Node.js ≥18.0.0
-- Rust ≥1.85.0 (installed automatically if missing)
-- **macOS/Linux**: `curl`, `wget`, `file` and `tar` used for dependency management
+- Node.js `>=18.0.0`
+- Rust `>=1.85.0`
+- **macOS/Linux**: `curl`, `wget`, `file`, and `tar` are used for dependency management
 
 ## Quick Start
 
 ```bash
-# Basic usage - automatically fetches website icon
 pake https://github.com --name "GitHub"
 
-# Advanced usage with custom options
 pake https://weekly.tw93.fun --name "Weekly" --icon https://cdn.tw93.fun/pake/weekly.icns --width 1200 --height 800 --hide-title-bar
 
-# Complete example with multiple options
 pake https://github.com --name "GitHub Desktop" --width 1400 --height 900 --tray always --debug
 
 ```

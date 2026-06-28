@@ -554,28 +554,23 @@ The ~5MB number is the installer/app size on disk, not runtime memory. At runtim
 
 ## Installation Issues
 
-### Permission Denied When Installing Globally
+### Local Changes Are Not Used When Running npm or npx
 
 **Problem:**
-`npm install -g pake-cli` fails with permission errors.
+`pnpm install -g pake-cli`, `npm install -g pake-cli`, `npx pake`, or `npx pake-cli` does not include changes from this fork.
 
 **Solution:**
 
-Use one of these approaches:
+This fork is not published to npm or any other registry, so build and link the local checkout.
 
-```bash
-# Option 1: Use npx (no installation needed)
-npx pake-cli https://example.com
-
-# Option 2: Fix npm permissions
-npm config set prefix ~/.npm-global
-echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
-source ~/.bashrc
-npm install -g pake-cli
-
-# Option 3: Use pnpm (recommended)
-pnpm install -g pake-cli
+```powershell
+pnpm install
+pnpm run cli:build
+pnpm link --global
+Get-Command pake
 ```
+
+If `Get-Command pake` points to an executable linked from this repository, the local CLI is active.
 
 ---
 
