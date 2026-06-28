@@ -225,12 +225,14 @@ export default abstract class BaseBuilder {
       }
     }
 
-    if (this.options.portable) {
+    // With --no-bundle there is no installer to copy; surface the raw
+    // executable the build produced instead.
+    if (this.options.bundle === false) {
       await this.copyRawBinary(npmDirectory, name);
       if (logSuccess) {
         logger.success('✔ Build success!');
         logger.success(
-          '✔ Portable app located in',
+          '✔ Raw binary located in',
           path.resolve(this.getRawBinaryPath(name)),
         );
       }

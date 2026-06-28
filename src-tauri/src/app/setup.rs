@@ -81,12 +81,12 @@ pub fn set_system_tray(
                 }
             }
             "quit" => {
-                #[cfg(target_os = "windows")]
-                if let Some(window) = app.get_webview_window("pake") {
-                    let _ = save_windows_window_state(&window, &package_name);
-                }
-                #[cfg(not(target_os = "windows"))]
-                let _ = app.save_window_state(StateFlags::all());
+                let flags = if _init_fullscreen {
+                    StateFlags::all()
+                } else {
+                    StateFlags::all() & !StateFlags::FULLSCREEN
+                };
+                let _ = app.save_window_state(flags);
                 app.exit(0);
             }
             _ => (),

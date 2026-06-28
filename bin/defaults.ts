@@ -1,4 +1,5 @@
 import { PakeCliOptions } from './types.js';
+import { getDefaultLinuxTargets } from './utils/platform.js';
 
 export const DEFAULT_PAKE_OPTIONS: PakeCliOptions = {
   icon: '',
@@ -20,7 +21,7 @@ export const DEFAULT_PAKE_OPTIONS: PakeCliOptions = {
   targets: (() => {
     switch (process.platform) {
       case 'linux':
-        return 'deb,appimage';
+        return getDefaultLinuxTargets();
       case 'darwin':
         return 'dmg';
       case 'win32':
@@ -40,6 +41,7 @@ export const DEFAULT_PAKE_OPTIONS: PakeCliOptions = {
   incognito: false,
   wasm: false,
   enableDragDrop: false,
+  bundle: true,
   keepBinary: false,
   portable: false,
   multiInstance: false,

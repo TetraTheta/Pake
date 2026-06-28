@@ -182,8 +182,11 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         .hideHelp(),
     )
     .addOption(
-      new Option('--portable', 'Build a Windows EXE without an installer')
-        .default(DEFAULT.portable)
+      new Option(
+        '--no-bundle',
+        'Skip packaging, output only the raw executable (Linux; for RPM distros where the bundler aborts)',
+      )
+        .default(DEFAULT.bundle)
         .hideHelp(),
     )
     .addOption(
