@@ -400,7 +400,7 @@ jobs:
           retention-days: 3
 
       - name: Upload to release (Linux)
-        uses: ncipollo/release-action@v1 # cspell:disable-line
+        uses: ncipollo/release-action@v1.21.0 # cspell:disable-line
         if: matrix.os == 'ubuntu-latest' && startsWith(github.ref, 'refs/tags/')
         with:
           allowUpdates: true
@@ -410,7 +410,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload to release (macOS)
-        uses: ncipollo/release-action@v1 # cspell:disable-line
+        uses: ncipollo/release-action@v1.21.0 # cspell:disable-line
         if: matrix.os == 'macos-latest' && startsWith(github.ref, 'refs/tags/')
         with:
           allowUpdates: true
@@ -420,7 +420,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload to release (Windows)
-        uses: ncipollo/release-action@v1 # cspell:disable-line
+        uses: ncipollo/release-action@v1.21.0 # cspell:disable-line
         if: matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/')
         with:
           allowUpdates: true

@@ -81,6 +81,17 @@ export function getDefaultTrayIconPath(
   return macTrayIconExists ? `png/${safeAppName}_512.png` : '';
 }
 
+export function buildBundleIconPaths(
+  platform: SupportedPlatform,
+  primaryIconPath: string,
+  safeAppName: string,
+): string[] {
+  if (platform === 'darwin') {
+    return [primaryIconPath, `png/${safeAppName}_512.png`];
+  }
+  return [primaryIconPath];
+}
+
 function asSupportedPlatform(platform: NodeJS.Platform): SupportedPlatform {
   if (platform !== 'win32' && platform !== 'darwin' && platform !== 'linux') {
     throw new Error(
@@ -293,7 +304,11 @@ async function mergeIcons(
     }
 
     if (updateIconPath) {
-      tauriConf.bundle.icon = [iconInfo.path];
+      tauriConf.bundle.icon = buildBundleIconPaths(
+        platform,
+        iconInfo.path,
+        safeAppName,
+      );
     } else {
       logger.warn(`✼ No app icon will be configured.`);
     }

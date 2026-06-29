@@ -355,6 +355,7 @@ async function getFallbackPng(requiredSize: number): Promise<string | null> {
   return (
     icons.find((icon) => icon.size === requiredSize)?.path ||
     icons.find((icon) => icon.size > requiredSize)?.path ||
+    icons[icons.length - 1]?.path ||
     null
   );
 }
@@ -386,7 +387,7 @@ async function createFallbackIcon(appName: string): Promise<string | null> {
     return outputPath;
   }
 
-  const sourcePath = await getFallbackPng(IS_LINUX ? 512 : 1024);
+  const sourcePath = await getFallbackPng(512);
   return sourcePath ? await processIcon(sourcePath, appName) : null;
 }
 

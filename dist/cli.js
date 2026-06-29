@@ -554,6 +554,12 @@ function getDefaultTrayIconPath(platform, safeAppName, macTrayIconExists = false
     }
     return macTrayIconExists ? `png/${safeAppName}_512.png` : '';
 }
+function buildBundleIconPaths(platform, primaryIconPath, safeAppName) {
+    if (platform === 'darwin') {
+        return [primaryIconPath, `png/${safeAppName}_512.png`];
+    }
+    return [primaryIconPath];
+}
 function asSupportedPlatform(platform) {
     if (platform !== 'win32' && platform !== 'darwin' && platform !== 'linux') {
         throw new Error(`Pake only supports win32, darwin, and linux; detected '${platform}'.`);
@@ -712,7 +718,7 @@ async function mergeIcons(options, name, tauriConf, platform, safeAppName) {
             }
         }
         if (updateIconPath) {
-            tauriConf.bundle.icon = [iconInfo.path];
+            tauriConf.bundle.icon = buildBundleIconPaths(platform, iconInfo.path, safeAppName);
         }
         else {
             logger.warn(`✼ No app icon will be configured.`);
@@ -2355,6 +2361,7 @@ async function getFallbackPng(requiredSize) {
         .sort((a, b) => a.size - b.size);
     return (icons.find((icon) => icon.size === requiredSize)?.path ||
         icons.find((icon) => icon.size > requiredSize)?.path ||
+        icons[icons.length - 1]?.path ||
         null);
 }
 async function createFallbackIcon(appName) {
@@ -2378,7 +2385,7 @@ async function createFallbackIcon(appName) {
         await fsExtra.outputFile(outputPath, buildIcoFromPngBuffers(frames));
         return outputPath;
     }
-    const sourcePath = await getFallbackPng(IS_LINUX ? 512 : 1024);
+    const sourcePath = await getFallbackPng(512);
     return sourcePath ? await processIcon(sourcePath, appName) : null;
 }
 /**

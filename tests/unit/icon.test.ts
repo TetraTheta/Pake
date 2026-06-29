@@ -14,7 +14,7 @@ const fallbackFixturePaths: string[] = [];
 
 async function ensureFallbackFixtures(): Promise<void> {
   const fallbackDir = path.join(npmDirectory, 'src-tauri', 'fallback-icon');
-  const requiredSizes = [16, 24, 32, 48, 64, 128, 256, 512, 1024];
+  const requiredSizes = [16, 24, 32, 48, 64, 128, 256];
 
   await fs.promises.mkdir(fallbackDir, { recursive: true });
   await Promise.all(

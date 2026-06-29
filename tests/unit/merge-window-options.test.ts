@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildBundleIconPaths,
   buildWindowConfigOverrides,
   getDefaultTrayIconPath,
 } from '../../bin/helpers/merge';
@@ -149,5 +150,23 @@ describe('getDefaultTrayIconPath', () => {
       'png/demo_512.png',
     );
     expect(getDefaultTrayIconPath('darwin', 'demo', false)).toBe('');
+  });
+});
+
+describe('buildBundleIconPaths', () => {
+  it('adds the macOS PNG window icon next to the ICNS bundle icon', () => {
+    expect(buildBundleIconPaths('darwin', 'icons/demo.icns', 'demo')).toEqual([
+      'icons/demo.icns',
+      'png/demo_512.png',
+    ]);
+  });
+
+  it('keeps a single icon path on Windows and Linux', () => {
+    expect(buildBundleIconPaths('win32', 'png/demo_256.ico', 'demo')).toEqual([
+      'png/demo_256.ico',
+    ]);
+    expect(buildBundleIconPaths('linux', 'png/demo_512.png', 'demo')).toEqual([
+      'png/demo_512.png',
+    ]);
   });
 });
