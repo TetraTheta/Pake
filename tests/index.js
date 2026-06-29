@@ -7,7 +7,7 @@
  * test files with a single, easy-to-use interface.
  */
 
-import { execSync, spawn } from "child_process";
+import { execFileSync, execSync, spawn } from "child_process";
 import fs from "fs";
 import path from "path";
 import ora from "ora";
@@ -253,18 +253,30 @@ class PakeTestRunner {
     // Weekly URL accessibility test
     await this.runTest("Weekly URL Accessibility", () => {
       try {
-        const testCommand = `node "${config.CLI_PATH}" ${TEST_URLS.WEEKLY} --name "URLTest" --debug`;
-        execSync(`echo "n" | timeout 5s ${testCommand} || true`, {
-          encoding: "utf8",
-          timeout: 8000,
-        });
+        this.runCliPromptCommand([
+          TEST_URLS.WEEKLY,
+          "--name",
+          "URLTest",
+          "--debug",
+        ]);
         return true; // If we get here, URL was parsed successfully
       } catch (error) {
+        if (error.status === 0) {
+          return true;
+        }
         return (
           !error.message.includes("Invalid URL") &&
           !error.message.includes("invalid")
         );
       }
+    });
+  }
+
+  runCliPromptCommand(args, timeout = 8000) {
+    return execFileSync("node", [config.CLI_PATH, ...args], {
+      input: "n\n",
+      encoding: "utf8",
+      timeout,
     });
   }
 
@@ -635,14 +647,17 @@ class PakeTestRunner {
 
   async runProxyTest() {
     await this.runTest("Proxy Configuration", async () => {
-      const command = `node "${config.CLI_PATH}" "https://google.com" --name "ProxyTest" --proxy-url "http://127.0.0.1:7890" --debug`;
       // We just want to check if the command parses the proxy argument correctly
       // It might fail to connect if no proxy is running, but that's expected
       try {
-        execSync(`echo "n" | timeout 5s ${command} || true`, {
-          encoding: "utf8",
-          timeout: 8000,
-        });
+        this.runCliPromptCommand([
+          "https://google.com",
+          "--name",
+          "ProxyTest",
+          "--proxy-url",
+          "http://127.0.0.1:7890",
+          "--debug",
+        ]);
         return true;
       } catch (error) {
         // If it fails with "connection refused" or similar, it means it TRIED to use the proxy
@@ -661,12 +676,8 @@ class PakeTestRunner {
       this.trackTempFile(testFile);
 
       try {
-        const command = `node "${config.CLI_PATH}" "${testFile}" --name "LocalApp" --debug`;
         // We just verify it accepts the local file path
-        execSync(`echo "n" | timeout 5s ${command} || true`, {
-          encoding: "utf8",
-          timeout: 8000,
-        });
+        this.runCliPromptCommand([testFile, "--name", "LocalApp", "--debug"]);
         return true;
       } catch (error) {
         // Validation failure is what we want to catch (if it rejected local files)
@@ -949,10 +960,28 @@ class PakeTestRunner {
 
           let buildStarted = false;
           let compilationStarted = false;
+          const outputTail = [];
+          const captureOutput = (stream, output) => {
+            output.split(/\r?\n/).forEach((line) => {
+              if (!line.trim()) return;
+              outputTail.push(`[${stream}] ${line}`);
+            });
+            while (outputTail.length > 160) {
+              outputTail.shift();
+            }
+          };
+          const printOutputTail = (reason) => {
+            if (outputTail.length === 0) return;
+            console.log(`   [Check] ${reason} output tail:`);
+            outputTail.forEach((line) => {
+              console.log(`      ${line}`);
+            });
+          };
 
           // Track progress
           child.stdout.on("data", (data) => {
             const output = data.toString();
+            captureOutput("stdout", output);
             if (output.includes("Installing package")) {
               console.log("   [Package] Installing dependencies...");
             }
@@ -980,6 +1009,7 @@ class PakeTestRunner {
 
           child.stderr.on("data", (data) => {
             const output = data.toString();
+            captureOutput("stderr", output);
             if (output.includes("Building app")) buildStarted = true;
             if (output.includes("Compiling")) compilationStarted = true;
             if (output.includes("Finished"))
@@ -1010,6 +1040,7 @@ class PakeTestRunner {
               console.log(
                 "   [FAIL] Multi-arch build timeout - no output files generated",
               );
+              printOutputTail("Multi-arch timeout");
               this.debugBuildDirectories(
                 {
                   app: appFile,
@@ -1078,8 +1109,9 @@ class PakeTestRunner {
             } else if (buildStarted && compilationStarted) {
               // If build started and compilation happened, but no output files found
               console.log(
-                "   [Warn]  Multi-arch build process completed but no output files found",
+                `   [FAIL] Multi-arch build process exited with code ${code} and no output files found`,
               );
+              printOutputTail("Multi-arch failure");
               this.debugBuildDirectories(
                 {
                   app: appFile,
@@ -1094,6 +1126,7 @@ class PakeTestRunner {
               resolve(false);
             } else {
               // Only reject if the build never started or failed early
+              printOutputTail("Multi-arch early failure");
               reject(
                 new Error(`Multi-arch build test failed with code ${code}`),
               );
