@@ -490,7 +490,15 @@ mod tests {
             false,
             TrayIconMode::Minimized
         ));
-        assert!(!should_create_tray_at_start(false, true, TrayIconMode::Always));
-        assert!(!should_create_tray_at_start(true, true, TrayIconMode::Never));
+        assert!(!should_create_tray_at_start(
+            false,
+            true,
+            TrayIconMode::Always
+        ));
+        assert!(!should_create_tray_at_start(
+            true,
+            true,
+            TrayIconMode::Never
+        ));
     }
 }
