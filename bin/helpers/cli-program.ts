@@ -149,7 +149,7 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
     .addOption(
       new Option(
         '--tray <mode>',
-        'Tray visibility: always, minimized, or never',
+        'Tray visibility: always, minimized (lazy), or never',
       )
         .choices(['always', 'minimized', 'never'])
         .default(DEFAULT.tray),
@@ -252,7 +252,7 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
     .addOption(
       new Option(
         '--enable-find',
-        'Enable in-page Find UI with Cmd/Ctrl+F/G shortcuts',
+        'Enable cross-platform in-page Find UI with Cmd/Ctrl+F/G shortcuts',
       )
         .default(DEFAULT.enableFind)
         .hideHelp(),

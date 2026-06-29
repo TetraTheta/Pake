@@ -98,6 +98,16 @@ fn should_start_hidden_to_tray(start_to_tray: bool, tray_mode: TrayIconMode) -> 
     start_to_tray && tray_mode != TrayIconMode::Never
 }
 
+fn should_create_tray_at_start(
+    show_system_tray: bool,
+    start_to_tray: bool,
+    tray_mode: TrayIconMode,
+) -> bool {
+    show_system_tray
+        && (tray_mode == TrayIconMode::Always
+            || should_start_hidden_to_tray(start_to_tray, tray_mode))
+}
+
 #[cfg(target_os = "linux")]
 fn apply_linux_gdk_backend() {
     if should_force_wayland_gdk_backend(
@@ -251,7 +261,7 @@ pub fn run_app() {
 
             set_system_tray(
                 app.app_handle(),
-                show_system_tray && tray_icon_mode != TrayIconMode::Never,
+                should_create_tray_at_start(show_system_tray, start_to_tray, tray_icon_mode),
                 &pake_config.system_tray_path,
                 init_fullscreen,
                 multi_window,
@@ -461,5 +471,26 @@ mod tests {
         assert!(should_start_hidden_to_tray(true, TrayIconMode::Minimized));
         assert!(!should_start_hidden_to_tray(true, TrayIconMode::Never));
         assert!(!should_start_hidden_to_tray(false, TrayIconMode::Always));
+    }
+
+    #[test]
+    fn minimized_tray_is_lazy_unless_starting_hidden() {
+        assert!(should_create_tray_at_start(
+            true,
+            false,
+            TrayIconMode::Always
+        ));
+        assert!(should_create_tray_at_start(
+            true,
+            true,
+            TrayIconMode::Minimized
+        ));
+        assert!(!should_create_tray_at_start(
+            true,
+            false,
+            TrayIconMode::Minimized
+        ));
+        assert!(!should_create_tray_at_start(false, true, TrayIconMode::Always));
+        assert!(!should_create_tray_at_start(true, true, TrayIconMode::Never));
     }
 }

@@ -241,7 +241,9 @@ Sets whether to disable web shortcuts in the original Pake container, defaults t
 
 #### [enable-find]
 
-Enable Pake's in-page Find UI. Default is `false`. When enabled, users can press `Cmd/Ctrl+F` to open Find, `Cmd/Ctrl+G` to jump to the next match, and `Cmd/Ctrl+Shift+G` to jump to the previous match.
+Enable Pake's cross-platform in-page Find UI. Default is `false`. When enabled, users can press `Cmd/Ctrl+F` to open Find, `Cmd/Ctrl+G` to jump to the next match, and `Cmd/Ctrl+Shift+G` to jump to the previous match.
+
+On Windows, WebView2 may provide its own native `Ctrl+F` find UI when browser accelerator keys are enabled, so this option is mainly needed when you want Pake's consistent Find UI across platforms.
 
 ```shell
 --enable-find
@@ -366,7 +368,7 @@ Customize the browser user agent. Default is empty.
 Controls when Pake creates a system tray icon. Default is `minimized`.
 
 - `always`: create the tray icon as soon as the app starts.
-- `minimized`: create the tray icon only when the window is hidden/minimized to tray.
+- `minimized`: create the tray icon only when the window is hidden/minimized to tray. This keeps startup lighter; the first hide action creates the tray on demand.
 - `never`: disable tray behavior. Close actions exit or close the window instead of hiding to tray.
 
 The tray uses the app icon generated from `--icon`, the website favicon, or the fallback icon. On macOS only, `--system-tray-icon` can override the tray icon without changing the app icon.

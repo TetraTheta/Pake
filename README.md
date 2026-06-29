@@ -74,6 +74,8 @@ When `--icon` is not provided, Pake fetches the website icon and converts it to 
 | macOS tray override | `.png` or `.ico` | 32 to 512 recommended           |
 | Linux               | `.png`           | 512                             |
 
+`--tray minimized` creates the tray icon on demand when the window is hidden, keeping startup lighter than `--tray always`.
+
 ## Development
 
 Rust `>=1.85` and Node `>=22` are recommended. Node `>=18` may also work. See the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) for platform setup.
