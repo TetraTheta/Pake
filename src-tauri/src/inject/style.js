@@ -34,10 +34,6 @@ window.addEventListener("DOMContentLoaded", (_event) => {
       opacity: 1;
     }
 
-    html::-webkit-scrollbar {
-      display: none !important;
-    }
-
     #__next .ChatPageSidebar_menuFooter__E1KTY,#__next > div.PageWithSidebarLayout_centeringDiv___L9br > div > aside > div > menu > section:nth-child(6) {
       display: none;
     }
