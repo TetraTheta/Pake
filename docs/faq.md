@@ -10,6 +10,7 @@ Common issues and solutions when using Pake.
   - [Linux: Installing on Fedora / RHEL / Oracle Linux (RPM-based distros)](#linux-installing-on-fedora--rhel--oracle-linux-rpm-based-distros)
   - [Linux: AppImage Build Fails with "failed to run linuxdeploy"](#linux-appimage-build-fails-with-failed-to-run-linuxdeploy)
   - [Linux: AppImage Crashes at Launch with WebKitNetworkProcess Not Found](#linux-appimage-crashes-at-launch-with-webkitnetworkprocess-not-found)
+  - [Linux: AppImage Opens but Buttons or Keyboard Do Not Work on Wayland](#linux-appimage-opens-but-buttons-or-keyboard-do-not-work-on-wayland)
   - [Linux: "cargo: command not found" After Installing Rust](#linux-cargo-command-not-found-after-installing-rust)
   - [Windows: Installation Timeout During First Build](#windows-installation-timeout-during-first-build)
   - [Windows: Missing Visual Studio Build Tools](#windows-missing-visual-studio-build-tools)
@@ -437,7 +438,7 @@ Specify custom dimensions when building:
 pake https://example.com --width 1200 --height 800
 ```
 
-See [CLI Usage Guide](cli-usage.md#window-options) for all window options.
+See [CLI Usage Guide](cli-usage.md#width) for all window options.
 
 ---
 
@@ -525,7 +526,7 @@ This is usually due to web compatibility issues. Try:
 
    Some authentication providers, especially Google, may block sign-in inside embedded webviews. Because Pake packages sites into a desktop webview, Google properties or sites that rely on Google OAuth may still fail to sign in even when `--new-window` or `--multi-window` is enabled. This is provider policy, not a packaging bug. In those cases, use the normal browser, a browser-installed app, or a native desktop client.
 
-   On macOS specifically, sites that use **Sign in with Apple** in popup mode (e.g. Yelp, Upwork) may end on a blank window after you authenticate. To avoid a WebKit crash, Pake navigates auth URLs in the current window on macOS, which breaks the popup's callback to the original page. Sign in to those sites with a normal browser or a native app.
+   On macOS, Pake keeps **Sign in with Apple** popup flows (e.g. Yelp, Upwork) on the native popup path so Apple's callback can return to the opener page. Other auth popups may still be navigated in the current window to avoid WebKit crashes. If a provider blocks embedded webviews or the login still fails, use the normal browser, a browser-installed app, or a native desktop client.
 
 5. **WeChat Web login environment error**
 

@@ -60,6 +60,11 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
     )
     .option('--multi-arch', 'Build a universal macOS binary', DEFAULT.multiArch)
     .option(
+      '--hide-window-decorations',
+      'Hide native window decorations on Windows and Linux',
+      DEFAULT.hideWindowDecorations,
+    )
+    .option(
       '--inject <files>',
       'Inject local CSS/JS files into the page',
       (val, previous) => {
@@ -84,6 +89,15 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
       )
         .default(DEFAULT.webviewDevtools)
         .hideHelp(),
+    )
+    .option(
+      '--json',
+      'Machine-readable output: logs to stderr, one JSON result on stdout',
+      DEFAULT.json,
+    )
+    .option(
+      '--config <path>',
+      'Load options from a JSON config file (fields mirror CLI options, see schema/pake.schema.json)',
     )
     .addOption(
       new Option(
@@ -267,8 +281,8 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         .default(DEFAULT.zoom)
         .argParser((value) => {
           const zoom = Number(value);
-          if (!Number.isFinite(zoom) || zoom < 50 || zoom > 200) {
-            throw new Error('--zoom must be a number between 50 and 200');
+          if (!Number.isInteger(zoom) || zoom < 50 || zoom > 200) {
+            throw new Error('--zoom must be an integer between 50 and 200');
           }
           return zoom;
         })

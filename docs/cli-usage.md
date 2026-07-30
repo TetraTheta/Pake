@@ -70,23 +70,35 @@ The packaged application will be located in the current working directory by def
 
 ### [url]
 
-The URL is the link to the web page you want to package or the path to a local HTML file. This is mandatory.
+The URL is the link to the web page you want to package, the path to a local HTML file, or the path to a directory of static web files containing an `index.html` at its root (e.g. a `dist/` build output). Mandatory unless a `--config` file provides `url`.
+
+```shell
+pake https://example.com --name Example
+pake ./page.html --name MyPage
+pake ./dist --name MyTool
+```
+
+For local packaging, hash-based routing works out of the box; history-mode SPA routing is not yet supported.
 
 ### [options]
 
 Various options are available for customization. `pake --help` shows every supported CLI option. This page is the complete reference.
 
-| Option             | Description                                          | Example                                        |
-| ------------------ | ---------------------------------------------------- | ---------------------------------------------- |
-| `--name`           | App name shown by the OS                             | `--name "Weekly"`                              |
-| `--icon`           | Custom app icon file or URL; otherwise auto-detected | `--icon https://cdn.tw93.fun/pake/weekly.icns` |
-| `--width`          | Initial window width (default: 1200px)               | `--width 1400`                                 |
-| `--height`         | Initial window height (default: 780px)               | `--height 900`                                 |
-| `--hide-title-bar` | Hide the macOS title bar                             | `--hide-title-bar`                             |
-| `--tray`           | Tray visibility: `always`, `minimized`, or `never`   | `--tray always`                                |
-| `--debug`          | Build a debug app with verbose output                | `--debug`                                      |
-| `--help`           | Show help                                            | `--help`                                       |
-| `--version`        | Show CLI version                                     | `--version`                                    |
+| Option                      | Description                                          | Example                                        |
+| --------------------------- | ---------------------------------------------------- | ---------------------------------------------- |
+| `--name`                    | App name shown by the OS                             | `--name "Weekly"`                              |
+| `--icon`                    | Custom app icon file or URL; otherwise auto-detected | `--icon https://cdn.tw93.fun/pake/weekly.icns` |
+| `--width`                   | Initial window width (default: 1200px)               | `--width 1400`                                 |
+| `--height`                  | Initial window height (default: 780px)               | `--height 900`                                 |
+| `--hide-title-bar`          | Hide the macOS title bar                             | `--hide-title-bar`                             |
+| `--hide-window-decorations` | Hide native window decorations (Windows/Linux only)  | `--hide-window-decorations`                    |
+| `--tray`                    | Tray visibility: `always`, `minimized`, or `never`   | `--tray always`                                |
+| `--debug`                   | Build a debug app with verbose output                | `--debug`                                      |
+| `--webview-devtools`        | Enable WebView developer tools in release builds     | `--webview-devtools`                           |
+| `--config`                  | Load options from a JSON config file                 | `--config app.json`                            |
+| `--json`                    | Machine-readable result on stdout (for automation)   | `--json`                                       |
+| `--help`                    | Show all CLI options                                 | `--help`                                       |
+| `--version`                 | Show CLI version                                     | `--version`                                    |
 
 For complete options, see detailed sections below.
 
@@ -163,7 +175,7 @@ Set the minimum height that the window can be resized to. Prevents UI breakage c
 
 #### [zoom]
 
-Set initial page zoom level (50-200). Default is `100`. Users can still adjust with `Cmd/Ctrl +/-/0` shortcuts.
+Set initial page zoom level as an integer between 50 and 200. Default is `100`. Users can still adjust with `Cmd/Ctrl +/-/0` shortcuts.
 
 ```shell
 --zoom <number>
@@ -177,6 +189,14 @@ Enable or disable immersive header. Default is `false`. Use the following comman
 
 ```shell
 --hide-title-bar
+```
+
+#### [hide-window-decorations]
+
+Hide the native window decorations on Windows and Linux. Default is `false`. This removes the title bar and window controls, then adds a top drag region for moving the window. Use `F11` to toggle native fullscreen. Ignored on macOS.
+
+```shell
+--hide-window-decorations
 ```
 
 #### [fullscreen]
@@ -504,6 +524,28 @@ This option is macOS-only and is intended for local development or quick testing
 pake https://github.com --name GitHub --install
 ```
 
+#### [camera]
+
+Request camera access on macOS by adding the `com.apple.security.device.camera` entitlement to the packaged app. Default is `false`. macOS only; ignored on Windows and Linux. Useful for web apps that need webcam access, such as video calls or QR scanning.
+
+```shell
+--camera
+
+# Example: Package a video-call site with camera access
+pake https://meet.google.com --name Meet --camera
+```
+
+#### [microphone]
+
+Request microphone access on macOS by adding the `com.apple.security.device.audio-input` entitlement to the packaged app. Default is `false`. macOS only; ignored on Windows and Linux.
+
+```shell
+--microphone
+
+# Example: Combine camera and microphone for a conferencing app
+pake https://meet.google.com --name Meet --camera --microphone
+```
+
 #### [multi-instance]
 
 Allow the packaged app to run more than one instance at the same time. Default is `false`, which means launching a second instance simply focuses the existing window. Enable this when you need to open several windows of the same app simultaneously.
@@ -546,6 +588,8 @@ Set the Windows Installer language. Options include `zh-CN`, `ja-JP`, More at [T
 #### [use-local-file]
 
 Enable recursive copying. When the URL is a local file path, enabling this option will copy the folder containing the file specified in the URL, as well as all sub-files, to the Pake static folder. This is disabled by default.
+
+Directory inputs (`pake ./dist`) always package the full tree; this flag only affects single-HTML-file inputs.
 
 ```shell
 --use-local-file
@@ -595,6 +639,44 @@ Enable WebView developer tools in a release build without showing the Windows co
 ```shell
 --webview-devtools
 ```
+
+#### [config]
+
+Load options from a declarative JSON config file instead of assembling flags. Fields are the camelCase CLI option names plus `url`; the published schema is [schema/pake.schema.json](../schema/pake.schema.json). An explicit CLI flag always wins over a config field. Unknown fields, wrong types, and out-of-range numbers fail fast. A relative `url` path resolves against the current working directory, not the config file's location. Invocation flags (`--json`, `--config`, `--version`) are CLI-only and rejected inside the file.
+
+```shell
+--config <path>
+
+# app.json
+# {
+#   "$schema": "https://raw.githubusercontent.com/tw93/Pake/main/schema/pake.schema.json",
+#   "url": "https://example.com",
+#   "name": "MyApp",
+#   "width": 1280,
+#   "hideTitleBar": true
+# }
+pake --config app.json
+```
+
+#### [json]
+
+Machine-readable mode for scripts and AI agents. All logs move to stderr and stdout carries exactly one JSON result object; interactive prompts are disabled (they are also disabled whenever stdin is not a TTY).
+
+```shell
+--json
+
+# Success (stdout):
+# {"ok":true,"name":"MyApp","platform":"darwin","arch":"arm64",
+#  "outputs":[{"path":"/abs/MyApp.dmg","sizeBytes":5242880,"format":"dmg"}],
+#  "warnings":[],"error":null}
+#
+# Failure (stdout):
+# {"ok":false, ..., "error":{"code":"ENV_MISSING","message":"...","hint":"..."}}
+```
+
+Exit codes: `0` success, `2` invalid input, `3` build failure, `4` missing environment or dependency setup failure (e.g. Rust not installed, package install failed), `1` unexpected error. Error codes: `INVALID_INPUT`, `ENV_MISSING`, `BUILD_FAILED`, `UNEXPECTED`, plus `NETWORK` (reserved; current versions report network failures under the phase code).
+
+On Linux multi-target builds (e.g. `--targets deb,appimage`), `ok` can be true with fewer `outputs` than requested: a target that fails while others succeed is reported in `warnings`, not as a failure. Check `outputs[].format` against the formats you asked for.
 
 #### [ignore-certificate-errors]
 

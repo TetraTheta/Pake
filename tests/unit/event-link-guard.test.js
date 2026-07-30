@@ -7,6 +7,7 @@ function loadEventHelpers({
   withTauri = false,
   pakeConfig = {},
   userAgent = "Mozilla/5.0",
+  initialZoom = null,
 } = {}) {
   const readInject = (filename) =>
     fs.readFileSync(
@@ -21,6 +22,10 @@ function loadEventHelpers({
   };
   const eventListeners = {};
   const elementsById = new Map();
+  const localStorageValues = new Map();
+  if (initialZoom !== null) {
+    localStorageValues.set("htmlZoom", initialZoom);
+  }
   const registerListener = (type, handler, options) => {
     eventListeners[type] = eventListeners[type] || [];
     eventListeners[type].push({ handler, options });
@@ -78,8 +83,10 @@ function loadEventHelpers({
         reload: () => {},
       },
       localStorage: {
-        getItem: () => null,
-        setItem: () => {},
+        getItem: (key) => localStorageValues.get(key) ?? null,
+        setItem: (key, value) => {
+          localStorageValues.set(key, value);
+        },
       },
       addEventListener: registerListener,
       dispatchEvent: () => {},
@@ -115,7 +122,7 @@ function loadEventHelpers({
   runInNewContext(readInject("event.js"), context);
   runInNewContext(readInject("shortcuts.js"), context);
   runInNewContext(readInject("context-menu.js"), context);
-  return { ...context, eventListeners, invokeCalls };
+  return { ...context, eventListeners, invokeCalls, localStorageValues };
 }
 
 function runDomReady(context) {
@@ -154,6 +161,22 @@ function makeClickEvent(anchor) {
 }
 
 describe("event link guard", () => {
+  it("falls back from malformed saved zoom values", () => {
+    const context = loadEventHelpers({
+      withTauri: true,
+      initialZoom: "not-a-zoom",
+    });
+
+    context.zoomIn();
+    context.zoomOut();
+
+    expect(context.invokeCalls).toEqual([
+      ["set_zoom", { percent: 110 }],
+      ["set_zoom", { percent: 100 }],
+    ]);
+    expect(context.localStorageValues.get("htmlZoom")).toBe("100%");
+  });
+
   it("bypasses javascript pseudo-links", () => {
     const { shouldBypassPakeLinkHandling } = loadEventHelpers();
 
@@ -225,6 +248,88 @@ describe("event link guard", () => {
     expect(result).toBe(popup);
   });
 
+  it("keeps named Apple auth popups on the native popup path on macOS", () => {
+    const popup = {};
+    const { openAuthNavigation, window } = loadEventHelpers({
+      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_5)",
+    });
+    const openCalls = [];
+    const originalWindowOpen = (url, name, specs) => {
+      openCalls.push({ url, name, specs });
+      return popup;
+    };
+
+    const result = openAuthNavigation(
+      originalWindowOpen,
+      "https://example.com/apple/login",
+      "AppleAuthentication",
+      "width=1200,height=800",
+    );
+
+    expect(openCalls).toEqual([
+      {
+        url: "https://example.com/apple/login",
+        name: "AppleAuthentication",
+        specs: "width=1200,height=800",
+      },
+    ]);
+    expect(window.location.href).toBe("https://example.com/app");
+    expect(result).toBe(popup);
+  });
+
+  it("keeps appleid auth URL popups on the native popup path on macOS", () => {
+    const popup = {};
+    const { openAuthNavigation, window } = loadEventHelpers({
+      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_5)",
+    });
+    const openCalls = [];
+    const originalWindowOpen = (url, name, specs) => {
+      openCalls.push({ url, name, specs });
+      return popup;
+    };
+
+    const result = openAuthNavigation(
+      originalWindowOpen,
+      "https://appleid.apple.com/auth/authorize",
+      "_blank",
+      "width=1200,height=800",
+    );
+
+    expect(openCalls).toEqual([
+      {
+        url: "https://appleid.apple.com/auth/authorize",
+        name: "_blank",
+        specs: "width=1200,height=800",
+      },
+    ]);
+    expect(window.location.href).toBe("https://example.com/app");
+    expect(result).toBe(popup);
+  });
+
+  it("falls back to current-window navigation if an Apple auth popup is blocked", () => {
+    const { openAuthNavigation, window } = loadEventHelpers({
+      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_5)",
+    });
+    const originalWindowOpen = vi.fn(() => null);
+
+    const result = openAuthNavigation(
+      originalWindowOpen,
+      "https://appleid.apple.com/auth/authorize",
+      "_blank",
+      "width=1200,height=800",
+    );
+
+    expect(originalWindowOpen).toHaveBeenCalledWith(
+      "https://appleid.apple.com/auth/authorize",
+      "_blank",
+      "width=1200,height=800",
+    );
+    expect(window.location.href).toBe(
+      "https://appleid.apple.com/auth/authorize",
+    );
+    expect(result).toBe(window);
+  });
+
   it("navigates target blank auth links in-place when new-window is disabled", () => {
     const context = loadEventHelpers({ withTauri: true });
     context.window.pakeConfig = { new_window: false };
@@ -241,7 +346,7 @@ describe("event link guard", () => {
     expect(context.window.location.href).toBe("https://mycompany.okta.com/sso");
   });
 
-  it("navigates target blank internal links in-place when new-window is disabled", () => {
+  it("retargets internal target=_blank links to _self instead of forcing a reload", () => {
     const context = loadEventHelpers({ withTauri: true });
     context.window.pakeConfig = {
       new_window: false,
@@ -249,16 +354,34 @@ describe("event link guard", () => {
     };
     runDomReady(context);
 
-    const event = makeClickEvent(
-      makeAnchor("https://app.example.com/callback", "_blank"),
-    );
+    const anchor = makeAnchor("https://app.example.com/callback", "_blank");
+    const event = makeClickEvent(anchor);
+    getClickGuard(context)(event);
+
+    // The link must be neutralized so the native webview never opens a system
+    // browser window, but the page's own click handler (and a normal in-app
+    // navigation) should still run -- so we do NOT preventDefault / reload.
+    expect(anchor.target).toBe("_self");
+    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(event.stopImmediatePropagation).not.toHaveBeenCalled();
+    expect(context.window.location.href).toBe("https://example.com/app");
+  });
+
+  it("still opens external target=_blank links in the system browser", () => {
+    const context = loadEventHelpers({ withTauri: true });
+    context.window.pakeConfig = { new_window: false };
+    runDomReady(context);
+
+    const anchor = makeAnchor("https://other.example.org/page", "_blank");
+    const event = makeClickEvent(anchor);
     getClickGuard(context)(event);
 
     expect(event.preventDefault).toHaveBeenCalled();
     expect(event.stopImmediatePropagation).toHaveBeenCalled();
-    expect(context.window.location.href).toBe(
-      "https://app.example.com/callback",
-    );
+    expect(context.invokeCalls).toContainEqual([
+      "plugin:shell|open",
+      { path: "https://other.example.org/page" },
+    ]);
   });
 
   it("does not install the custom context menu when webview devtools is enabled", () => {
@@ -361,5 +484,30 @@ describe("event link guard", () => {
       ],
       ["increment_dock_badge", undefined],
     ]);
+  });
+});
+
+describe("getFilenameFromUrl data URI extension", () => {
+  it("maps a structured image subtype to a real extension (svg+xml -> svg)", () => {
+    const context = loadEventHelpers();
+    const filename = context.getFilenameFromUrl(
+      "data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=",
+    );
+    expect(filename).toMatch(/^image-.*\.svg$/);
+    expect(filename).not.toContain("+");
+  });
+
+  it("normalizes jpeg to jpg", () => {
+    const context = loadEventHelpers();
+    expect(context.getFilenameFromUrl("data:image/jpeg;base64,AAAA")).toMatch(
+      /^image-.*\.jpg$/,
+    );
+  });
+
+  it("does not fold the data payload into the extension when ';' is absent", () => {
+    const context = loadEventHelpers();
+    const filename = context.getFilenameFromUrl("data:image/png,rawdata");
+    expect(filename).toMatch(/^image-.*\.png$/);
+    expect(filename).not.toContain("data:image/");
   });
 });

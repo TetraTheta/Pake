@@ -1,4 +1,4 @@
-use crate::app::window::open_additional_window_safe;
+use crate::app::window::{open_additional_window_safe, reapply_window_icon};
 use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -18,6 +18,7 @@ use crate::util::save_windows_window_state;
 pub fn restore_window(window: &WebviewWindow) -> tauri::Result<()> {
     let _ = window.unminimize();
     window.show()?;
+    reapply_window_icon(window);
     let _ = window.set_focus();
     Ok(())
 }
@@ -53,7 +54,10 @@ pub fn set_system_tray(
         return Ok(());
     }
 
-    let new_window = MenuItemBuilder::with_id("new_window", "New Window").build(app)?;
+    // Menu events are broadcast to every handler in Tauri v2, so the tray item
+    // must not share the "new_window" id with the app menu accelerator
+    // (Cmd/Ctrl+N), or one click opens two windows.
+    let new_window = MenuItemBuilder::with_id("tray_new_window", "New Window").build(app)?;
     let hide_app = MenuItemBuilder::with_id("hide_app", "Hide").build(app)?;
     let show_app = MenuItemBuilder::with_id("show_app", "Show").build(app)?;
     let quit = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
@@ -76,7 +80,7 @@ pub fn set_system_tray(
         .tooltip(&loading_tooltip)
         .menu(&menu)
         .on_menu_event(move |app, event| match event.id().as_ref() {
-            "new_window" => {
+            "tray_new_window" => {
                 open_additional_window_safe(app);
             }
             "hide_app" => {

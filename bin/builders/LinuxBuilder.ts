@@ -32,6 +32,10 @@ export default class LinuxBuilder extends BaseBuilder {
     this.options.targets = this.buildFormat;
   }
 
+  getReportArch(): string {
+    return this.buildArch;
+  }
+
   getFileName() {
     const { name = 'pake-app', targets } = this.options;
     const version = tauriConfig.version;
@@ -42,18 +46,10 @@ export default class LinuxBuilder extends BaseBuilder {
     if (this.buildArch === 'arm64') {
       arch =
         buildType === 'rpm' || buildType === 'appimage' ? 'aarch64' : 'arm64';
+    } else if (this.buildArch === 'x64') {
+      arch = buildType === 'rpm' ? 'x86_64' : 'amd64';
     } else {
-      if (this.buildArch === 'x64') {
-        arch = buildType === 'rpm' ? 'x86_64' : 'amd64';
-      } else {
-        arch = this.buildArch;
-        if (
-          this.buildArch === 'arm64' &&
-          (buildType === 'rpm' || buildType === 'appimage')
-        ) {
-          arch = 'aarch64';
-        }
-      }
+      arch = this.buildArch;
     }
 
     if (this.currentBuildType === 'rpm') {
@@ -230,11 +226,13 @@ post_remove() {
       await shellExec(
         `bsdtar --zstd -cf "${packagePath}" -C "${dataDir}" .PKGINFO .INSTALL usr`,
       );
+      await this.recordArtifact(packagePath, 'zst');
       logger.success('✔ Build success!');
       logger.success('✔ App installer located in', packagePath);
     } finally {
       if (removeSourceDeb) {
         await fsExtra.remove(debPath);
+        this.removeArtifact(debPath);
       }
       await fsExtra.remove(workDir);
     }
